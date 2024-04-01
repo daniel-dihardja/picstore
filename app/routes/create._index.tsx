@@ -3,52 +3,90 @@ import {
   json,
   unstable_parseMultipartFormData,
 } from "@remix-run/node";
-import { s3UploaderHandler } from "../.server/s3";
-import { useFetcher } from "@remix-run/react";
+import { s3UploaderHandler } from "../.server/uploadToS3";
+import { Form, useFetcher, useSubmit } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import { Header } from "~/components/Header";
+import MT from "@material-tailwind/react";
+const { Button } = MT;
+
+import { style2image, defaultWorkflow } from "~/.server/workflows";
+import { queuePrompt } from "~/.server/comfyui";
+
+// export async function action({ request }: ActionFunctionArgs) {
+//   const formData = await unstable_parseMultipartFormData(
+//     request,
+//     s3UploaderHandler
+//   );
+
+//   const files = formData.getAll("file");
+
+//   return json({
+//     files: files.map((file) => ({
+//       name: file,
+//       url: `https://picstore.s3.eu-central-1.amazonaws.com/${file}`,
+//     })),
+//   });
+// }
 
 export async function action({ request }: ActionFunctionArgs) {
-  const formData = await unstable_parseMultipartFormData(
-    request,
-    s3UploaderHandler
+  const res = await queuePrompt(
+    "default.json",
+    "style2image",
+    "http://127.0.0.1:8188"
   );
 
-  const files = formData.getAll("file");
+  console.log(res);
 
-  return json({
-    files: files.map((file) => ({
-      name: file,
-      url: `https://picstore.s3.eu-central-1.amazonaws.com/${file}`,
-    })),
-  });
+  return json({});
 }
 
 export default function Create() {
-  const { submit, isUploading, images } = useFileUpload();
+  //const { submit, isUploading, images } = useFileUpload();
+  const submit = useSubmit();
 
   return (
     <main>
       <Header></Header>
 
-      <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-        {isUploading ? <p>Uploading...</p> : <p>Select an image</p>}
-        <input
-          onChange={(event) => submit(event.currentTarget.files)}
-          className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-          type="file"
-        ></input>
-      </label>
+      <div className="container mx-auto px-4 py-4">
+        <div className="columns-2 gap-4">
+          <div
+            // style={{ border: "1px solid" }}
+            className="flex place-content-end"
+          >
+            <Image name="test" url="http://localhost:3000/img/bg-03.avif" />
+          </div>
+          <div
+            // style={{ border: "1px solid" }}
+            className="flex place-content-left"
+          >
+            <Image name="test" url="http://localhost:3000/img/bg-03.avif" />
+          </div>
+        </div>
+        <div className="columns-1 flex place-content-center mt-20">
+          <Form action="/create" method="POST">
+            <Button type="submit">Generate</Button>
+          </Form>
+        </div>
 
-      <ul>
         {/*
          * Here we render the list of images including the ones we're uploading
          * and the ones we've already uploaded
          */}
-        {images.map((file) => {
-          return <Image key={file.name} name={file.name} url={file.url} />;
-        })}
-      </ul>
+        {/* {images.map((file) => {
+            return <Image key={file.name} name={file.name} url={file.url} />;
+          })} */}
+
+        {/* <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+          {isUploading ? <p>Uploading...</p> : <p>Select an image</p>}
+          <input
+            onChange={(event) => submit(event.currentTarget.files)}
+            className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+            type="file"
+          ></input>
+        </label> */}
+      </div>
     </main>
   );
 }
