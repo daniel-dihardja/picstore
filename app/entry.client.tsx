@@ -13,9 +13,9 @@ startTransition(() => {
   hydrateRoot(
     document,
     <StrictMode>
-    <ThemeProvider>
-      <RemixBrowser />
-    </ThemeProvider>
+      <ThemeProvider>
+        <RemixBrowser />
+      </ThemeProvider>
     </StrictMode>
   );
 });
