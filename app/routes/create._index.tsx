@@ -1,93 +1,175 @@
 import {
   ActionFunctionArgs,
+  LoaderFunctionArgs,
   json,
-  unstable_parseMultipartFormData,
+  redirectDocument,
 } from "@remix-run/node";
-import { s3UploaderHandler } from "../.server/uploadToS3";
-import { Form, useFetcher, useSubmit } from "@remix-run/react";
+import {
+  Form,
+  useActionData,
+  useFetcher,
+  useLoaderData,
+} from "@remix-run/react";
 import { useEffect, useState } from "react";
 import { Header } from "~/components/Header";
 import MT from "@material-tailwind/react";
 const { Button } = MT;
 
-import { style2image, defaultWorkflow } from "~/.server/workflows";
 import { queuePrompt } from "~/.server/comfyui";
+import WebSocket from "ws";
+import { listImages } from "~/.server/listImages";
+import { progressEventBus } from "~/.server/progress-event-bus";
+import { useProgress } from "~/utils/useProgress";
+import { nanoid } from "nanoid";
 
-// export async function action({ request }: ActionFunctionArgs) {
-//   const formData = await unstable_parseMultipartFormData(
-//     request,
-//     s3UploaderHandler
-//   );
+interface ProgressData {
+  id: string;
+  value: number;
+  max: number;
+}
 
-//   const files = formData.getAll("file");
+type ComfyProgressEvent = Readonly<{
+  id: string;
+  value: number;
+  max: number;
+}>;
 
-//   return json({
-//     files: files.map((file) => ({
-//       name: file,
-//       url: `https://picstore.s3.eu-central-1.amazonaws.com/${file}`,
-//     })),
-//   });
-// }
+export async function loader({ request }: LoaderFunctionArgs) {
+  const { searchParams } = new URL(request.url);
+  const style = searchParams.get("style");
+  const files = await listImages();
+  const images = files
+    ?.filter((e) => e.Key?.includes(".png"))
+    .map((e) => `${process.env.PICSTORE_URL}/${e.Key}`)
+    .reverse();
+  const clientId = nanoid();
+
+  return json({ style, images, clientId });
+}
+
+const trackProgress = async (
+  promptId: string,
+  ws: WebSocket,
+  callback: {
+    onProgress: (value: number, max: number) => void;
+    onDone: () => void;
+  }
+) => {
+  return new Promise((resolve) => {
+    ws.on("message", (data, isBinary) => {
+      if (isBinary) {
+        console.debug("Received binary data");
+        return;
+      }
+      const jd: {
+        type: string;
+        data: undefined | ProgressData;
+      } = JSON.parse(data.toString());
+      if (jd.type === "progress") {
+        const { value, max } = jd.data as ProgressData;
+        callback.onProgress(value, max);
+        if (value === max) {
+          ws.off("message", () => {});
+          // add 2 secs after completion to allow some time to upload to s3
+          setTimeout(() => {
+            callback.onDone();
+            resolve(json({ promptId }));
+          }, 2000);
+        }
+      }
+      // if (jd.type === "status") {
+      //   if (jd.data?.status.exec_info) {
+      //     console.log(jd.data?.status.exec_info);
+      //     const queueRemaining = jd.data?.status.exec_info.queue_remaining;
+      //     if (queueRemaining === 0) {
+      //       resolve(json({ promptId }));
+      //     }
+      //   }
+      // }
+    });
+  });
+};
 
 export async function action({ request }: ActionFunctionArgs) {
-  const res = await queuePrompt(
-    "default.json",
-    "style2image",
+  const body = await request.formData();
+  const style = body.get("style") || "default";
+
+  const url = new URL(request.url);
+  const clientId = url.searchParams.get("clientId") as string;
+
+  const imgName = "";
+  const promptId = await queuePrompt(
+    style.toString(),
+    clientId,
+    imgName,
     "http://127.0.0.1:8188"
   );
 
-  console.log(res);
+  const ws = new WebSocket(`ws://127.0.0.1:8188/ws?clientId=${clientId}`, {
+    perMessageDeflate: false,
+  });
 
-  return json({});
+  await trackProgress(promptId, ws, {
+    onProgress: (value: number, max: number) => {
+      console.log({ value, max });
+      progressEventBus.emit<ComfyProgressEvent>({ id: clientId, value, max });
+    },
+    onDone: () => {
+      console.log("Done");
+    },
+  });
+
+  return redirectDocument(`/create?style=${style}`);
+}
+
+interface loaderDataType {
+  style: string;
+  images: string[];
+  clientId: string;
+}
+
+interface actionDataType {
+  url: string;
 }
 
 export default function Create() {
-  //const { submit, isUploading, images } = useFileUpload();
-  const submit = useSubmit();
+  const loaderData = useLoaderData<loaderDataType>();
+  const [images, setImages] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (loaderData) {
+      setImages(loaderData.images);
+    }
+  }, [loaderData]);
+
+  const progress = useProgress<ComfyProgressEvent>(loaderData.clientId);
+  const actionUrl = `/create?clientId=${loaderData.clientId}`;
 
   return (
-    <main>
+    <div className="container mx-auto px-4 py-4">
       <Header></Header>
 
-      <div className="container mx-auto px-4 py-4">
-        <div className="columns-2 gap-4">
-          <div
-            // style={{ border: "1px solid" }}
-            className="flex place-content-end"
-          >
-            <Image name="test" url="http://localhost:3000/img/bg-03.avif" />
-          </div>
-          <div
-            // style={{ border: "1px solid" }}
-            className="flex place-content-left"
-          >
-            <Image name="test" url="http://localhost:3000/img/bg-03.avif" />
-          </div>
-        </div>
-        <div className="columns-1 flex place-content-center mt-20">
-          <Form action="/create" method="POST">
-            <Button type="submit">Generate</Button>
-          </Form>
-        </div>
-
-        {/*
-         * Here we render the list of images including the ones we're uploading
-         * and the ones we've already uploaded
-         */}
-        {/* {images.map((file) => {
-            return <Image key={file.name} name={file.name} url={file.url} />;
-          })} */}
-
-        {/* <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-          {isUploading ? <p>Uploading...</p> : <p>Select an image</p>}
-          <input
-            onChange={(event) => submit(event.currentTarget.files)}
-            className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-            type="file"
-          ></input>
-        </label> */}
+      <div className="columns-1 flex place-content-center mt-20">
+        <Form action={actionUrl} method="POST">
+          <input type="hidden" name="style" value={loaderData.style} />
+          <Button type="submit">Generate</Button>
+        </Form>
       </div>
-    </main>
+
+      {progress?.success && progress.event ? (
+        <p>
+          {progress.event.value} / {progress.event.max}
+        </p>
+      ) : null}
+
+      <div className="columns-3 gap-4 mt-6">
+        {images.map((imageUrl, index) => (
+          <div key={index} className="flex place-content-center">
+            <img src={imageUrl} alt={`Gallery item ${index}`} width="320" />
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

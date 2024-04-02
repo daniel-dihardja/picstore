@@ -1,47 +1,16 @@
 import {
-  S3Client,
   PutObjectCommand,
   GetObjectCommand,
   PutObjectCommandInput,
 } from "@aws-sdk/client-s3";
 import { UploadHandler } from "@remix-run/node";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { s3Client } from "./s3";
 
-const {
-  PICSTORE_ACCESS_KEY,
-  PICSTORE_SECRET,
-  PICSTORE_REGION,
-  PICSTORE_BUCKET,
-  PICSTORE_URL,
-} = process.env;
-
-if (!PICSTORE_ACCESS_KEY) {
-  throw new Error(`PICSTORE_ACCESS_KEY must be set.`);
-}
-
-if (!PICSTORE_SECRET) {
-  throw new Error(`PICSTORE_SECRET must be set.`);
-}
-
-if (!PICSTORE_REGION) {
-  throw new Error(`PICSTORE_REGION must be set.`);
-}
-
+const { PICSTORE_BUCKET } = process.env;
 if (!PICSTORE_BUCKET) {
   throw new Error(`PICSTORE_BUCKET must be set.`);
 }
-
-if (!PICSTORE_URL) {
-  throw new Error(`Bucket url must be set.`);
-}
-
-const s3Client = new S3Client({
-  region: PICSTORE_REGION,
-  credentials: {
-    accessKeyId: PICSTORE_ACCESS_KEY,
-    secretAccessKey: PICSTORE_SECRET,
-  },
-});
 
 const uploadStreamToS3 = async (
   data: AsyncIterable<Uint8Array>,
