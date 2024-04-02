@@ -23,15 +23,15 @@ import { useProgress } from "~/utils/useProgress";
 import { nanoid } from "nanoid";
 
 interface ProgressData {
-  id: string;
   value: number;
   max: number;
 }
 
 type ComfyProgressEvent = Readonly<{
   id: string;
-  value: number;
-  max: number;
+  complete: boolean;
+  percentage: number;
+  float: number;
 }>;
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -112,10 +112,21 @@ export async function action({ request }: ActionFunctionArgs) {
   await trackProgress(promptId, ws, {
     onProgress: (value: number, max: number) => {
       console.log({ value, max });
-      progressEventBus.emit<ComfyProgressEvent>({ id: clientId, value, max });
+      progressEventBus.emit<ComfyProgressEvent>({
+        id: clientId,
+        percentage: Math.round((value / max) * 100),
+        float: value / max,
+        complete: false,
+      });
     },
     onDone: () => {
       console.log("Done");
+      progressEventBus.emit<ComfyProgressEvent>({
+        id: clientId,
+        percentage: 100,
+        float: 1,
+        complete: true,
+      });
     },
   });
 
@@ -157,9 +168,7 @@ export default function Create() {
       </div>
 
       {progress?.success && progress.event ? (
-        <p>
-          {progress.event.value} / {progress.event.max}
-        </p>
+        <p>{progress.event.percentage} %</p>
       ) : null}
 
       <div className="columns-3 gap-4 mt-6">
