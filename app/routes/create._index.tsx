@@ -21,6 +21,8 @@ import { listImages } from "~/.server/listImages";
 import { progressEventBus } from "~/.server/progress-event-bus";
 import { useProgress } from "~/utils/useProgress";
 import { nanoid } from "nanoid";
+import { Pic } from "~/components/Pic";
+import { PicProgress } from "~/components/PicProgress";
 
 interface ProgressData {
   value: number;
@@ -70,22 +72,13 @@ const trackProgress = async (
         callback.onProgress(value, max);
         if (value === max) {
           ws.off("message", () => {});
-          // add 2 secs after completion to allow some time to upload to s3
+          // add 2 secs after completion to allow some time to upload to s3. Shall be improoved in the future
           setTimeout(() => {
             callback.onDone();
             resolve(json({ promptId }));
           }, 2000);
         }
       }
-      // if (jd.type === "status") {
-      //   if (jd.data?.status.exec_info) {
-      //     console.log(jd.data?.status.exec_info);
-      //     const queueRemaining = jd.data?.status.exec_info.queue_remaining;
-      //     if (queueRemaining === 0) {
-      //       resolve(json({ promptId }));
-      //     }
-      //   }
-      // }
     });
   });
 };
@@ -147,6 +140,8 @@ export default function Create() {
   const loaderData = useLoaderData<loaderDataType>();
   const [images, setImages] = useState<string[]>([]);
 
+  console.log({ images });
+
   useEffect(() => {
     if (loaderData) {
       setImages(loaderData.images);
@@ -167,15 +162,13 @@ export default function Create() {
         </Form>
       </div>
 
-      {progress?.success && progress.event ? (
-        <p>{progress.event.percentage} %</p>
-      ) : null}
+      <div className="columns-4 gap-4 mt-6">
+        {progress?.success && progress.event ? (
+          <PicProgress percentage={progress.event.percentage}></PicProgress>
+        ) : null}
 
-      <div className="columns-3 gap-4 mt-6">
         {images.map((imageUrl, index) => (
-          <div key={index} className="flex place-content-center">
-            <img src={imageUrl} alt={`Gallery item ${index}`} width="320" />
-          </div>
+          <Pic key={index} url={imageUrl}></Pic>
         ))}
       </div>
     </div>
