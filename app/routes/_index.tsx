@@ -1,4 +1,5 @@
 import type { MetaFunction } from "@remix-run/node";
+import { Outlet } from "@remix-run/react";
 import { Header } from "~/components/Header";
 
 export const meta: MetaFunction = () => {
@@ -10,7 +11,7 @@ export const meta: MetaFunction = () => {
 
 export default function Index() {
   return (
-    <div className="container mx-auto px-4 py-4">
+    <div>
       <Header></Header>
     </div>
   );

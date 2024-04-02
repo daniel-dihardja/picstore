@@ -152,24 +152,25 @@ export default function Create() {
   const actionUrl = `/create?clientId=${loaderData.clientId}`;
 
   return (
-    <div className="container mx-auto px-4 py-4">
+    <div>
       <Header></Header>
+      <div className="container mx-auto px-4 py-4">
+        <div className="columns-1 flex place-content-center mt-20">
+          <Form action={actionUrl} method="POST">
+            <input type="hidden" name="style" value={loaderData.style} />
+            <Button type="submit">Generate</Button>
+          </Form>
+        </div>
 
-      <div className="columns-1 flex place-content-center mt-20">
-        <Form action={actionUrl} method="POST">
-          <input type="hidden" name="style" value={loaderData.style} />
-          <Button type="submit">Generate</Button>
-        </Form>
-      </div>
+        <div className="grid grid-cols-4 gap-4 mt-6">
+          {progress?.success && progress.event ? (
+            <PicProgress percentage={progress.event.percentage}></PicProgress>
+          ) : null}
 
-      <div className="columns-4 gap-4 mt-6">
-        {progress?.success && progress.event ? (
-          <PicProgress percentage={progress.event.percentage}></PicProgress>
-        ) : null}
-
-        {images.map((imageUrl, index) => (
-          <Pic key={index} url={imageUrl}></Pic>
-        ))}
+          {images.map((imageUrl, index) => (
+            <Pic key={index} url={imageUrl}></Pic>
+          ))}
+        </div>
       </div>
     </div>
   );

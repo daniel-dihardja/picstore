@@ -8,13 +8,13 @@ export interface PicProgressProps {
 
 export function PicProgress(props: PicProgressProps) {
   return (
-    <Card className="pb-4">
+    <Card className="mb-4">
       <CardHeader floated={false} shadow={false}>
-        <div
-          style={{ width: "220px", height: "220px" }}
-          className="flex place-content-center pt-20"
-        >
+        <div className="flex place-content-center pt-20">
           <h3 className="text-4xl">{props.percentage} %</h3>
+        </div>
+        <div className="flex place-content-center pt-4">
+          <p className="text-xs">Generating image</p>
         </div>
       </CardHeader>
     </Card>

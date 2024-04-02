@@ -8,8 +8,12 @@ export interface PicProps {
 export function Pic(props: PicProps) {
   return (
     <Card className="mb-4">
-      <CardBody className="flex place-content-center">
+      <CardBody className="flex flex-col place-content-center">
         <img src={props.url} alt="card-image" width="250" />
+        <br />
+        <a href="">Download large-2x ... 2 Credits</a>
+        <a href="">Download large-4x ... 3 Credits</a>
+        <a href="">Download large-8x ... 4 Credits</a>
       </CardBody>
     </Card>
   );
