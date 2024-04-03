@@ -26,6 +26,7 @@ import { Pic } from "~/components/Pic";
 import { PicProgress } from "~/components/PicProgress";
 import { UploadPanel } from "~/components/UploadPanel";
 import { s3UploaderHandler } from "~/.server/uploadToS3";
+import { loadWorkflow } from "~/.server/workflow-loader";
 
 interface ProgressData {
   value: number;
@@ -39,6 +40,13 @@ type ComfyProgressEvent = Readonly<{
   float: number;
 }>;
 
+interface SiteState {
+  clientId: string;
+  style: string;
+  inputImage: string;
+  images: string[];
+}
+
 export async function loader({ request }: LoaderFunctionArgs) {
   const { searchParams } = new URL(request.url);
   const style = searchParams.get("style");
@@ -49,7 +57,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .reverse();
   const clientId = nanoid();
 
-  return json({ style, images, clientId });
+  const inputImage = searchParams.get("inputImage");
+
+  return json({ clientId, style, inputImage, images });
 }
 
 const trackProgress = async (
@@ -90,12 +100,19 @@ async function generate(request: Request) {
   const url = new URL(request.url);
   const clientId = url.searchParams.get("clientId") as string;
   const style = url.searchParams.get("style") as string;
-  const promptId = await queuePrompt(
-    style as string,
-    clientId,
-    "",
-    "http://127.0.0.1:8188"
-  );
+  const inputImage = url.searchParams.get("inputImage") as string;
+
+  const workflow = await loadWorkflow(style);
+
+  console.log("inputImage: ", inputImage);
+
+  if (inputImage) {
+    workflow["10"].inputs.image = `/${inputImage}`;
+  }
+
+  workflow["1"].inputs.seed = Math.round(Math.random() * 99999);
+
+  const promptId = await queuePrompt(workflow, clientId);
 
   const ws = new WebSocket(`ws://127.0.0.1:8188/ws?clientId=${clientId}`, {
     perMessageDeflate: false,
@@ -128,7 +145,7 @@ async function upload(request: Request) {
     s3UploaderHandler
   );
 
-  return json({ inputImage: formData.get("file") });
+  return { inputImage: formData.get("file")?.toString() };
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -140,39 +157,31 @@ export async function action({ request }: ActionFunctionArgs) {
       await generate(request);
       return redirectDocument(request.url);
     case "upload":
-      return await upload(request);
+      // eslint-disable-next-line no-case-declarations
+      const { inputImage } = await upload(request);
+      url.searchParams.set("inputImage", inputImage as string);
+      return redirectDocument(url.toString());
     default:
       return json({});
   }
 }
 
-interface loaderDataType {
-  style: string;
-  images: string[];
-  clientId: string;
-}
-
-interface actionDataType {
-  inputImage: string;
-}
-
 export default function Create() {
-  const loaderData = useLoaderData<loaderDataType>();
-  const actionData = useActionData<actionDataType>();
+  const loaderData = useLoaderData<SiteState>();
   const [images, setImages] = useState<string[]>([]);
   const [inputImage, setInputImage] = useState<string>("");
+
+  console.log(loaderData);
 
   useEffect(() => {
     if (loaderData) {
       setImages(loaderData.images);
+      setInputImage(loaderData.inputImage);
     }
-    if (actionData) {
-      setInputImage(actionData.inputImage);
-    }
-  }, [loaderData, actionData]);
+  }, [loaderData]);
 
   const progress = useProgress<ComfyProgressEvent>(loaderData.clientId);
-  const actionUrl = `/create?clientId=${loaderData.clientId}&style=${loaderData.style}`;
+  const actionUrl = `/create?clientId=${loaderData.clientId}&style=${loaderData.style}&inputImage=${loaderData.inputImage}`;
 
   return (
     <div>
@@ -182,7 +191,10 @@ export default function Create() {
           <h1 className="mb-6 text-2xl">{loaderData.style}</h1>
           <Card>
             <CardBody className="p-3 h-96">
-              <UploadPanel action={`${actionUrl}&type=upload`}></UploadPanel>
+              <UploadPanel
+                action={`${actionUrl}&type=upload`}
+                image={inputImage}
+              ></UploadPanel>
             </CardBody>
           </Card>
         </div>

@@ -1,28 +1,11 @@
-import { promises as fs } from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+const { COMFY_API_URL } = process.env;
+if (!COMFY_API_URL) {
+  throw new Error(`COMFY_API_URL must be set.`);
+}
 
-const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
-const __dirname = path.dirname(__filename); // get the name of the directory
-
-const getPrompt = async (workflowName: string) => {
-  const path = `${__dirname}/../app/workflows/${workflowName}.json`;
-  const fileContent = await fs.readFile(path, "utf8");
-  const wf = JSON.parse(fileContent);
-  wf["3"].inputs.seed = Math.round(Math.random() * 99999);
-  wf["14"].inputs.filename_prefix = "purple-bottle";
-  return wf;
-};
-
-export const queuePrompt = async (
-  workflowName: string,
-  clientId: string,
-  imageName: string,
-  serverAddress: string
-) => {
+export const queuePrompt = async (prompt: undefined, clientId: string) => {
   try {
-    const prompt = await getPrompt(workflowName);
-    const res = await fetch(`${serverAddress}/prompt`, {
+    const res = await fetch(`${COMFY_API_URL}/prompt`, {
       method: "POST",
       body: JSON.stringify({ prompt }),
       headers: {

@@ -6,11 +6,17 @@ import {
 import { UploadHandler } from "@remix-run/node";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3Client } from "./s3";
+import sharp, { Sharp } from "sharp";
+declare function sharp(): Sharp;
 
 const { PICSTORE_BUCKET } = process.env;
 if (!PICSTORE_BUCKET) {
   throw new Error(`PICSTORE_BUCKET must be set.`);
 }
+
+const resizeImage = async (imgData: Buffer) => {
+  return sharp(imgData).resize({ width: 512 }).toBuffer();
+};
 
 const uploadStreamToS3 = async (
   data: AsyncIterable<Uint8Array>,
@@ -19,8 +25,8 @@ const uploadStreamToS3 = async (
 ): Promise<string> => {
   const params: PutObjectCommandInput = {
     Bucket: PICSTORE_BUCKET,
-    Key: key,
-    Body: await convertToBuffer(data),
+    Key: `input/${key}`,
+    Body: await resizeImage(await convertToBuffer(data)),
     ContentType: contentType,
   };
 

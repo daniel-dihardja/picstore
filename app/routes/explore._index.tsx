@@ -9,10 +9,10 @@ export default function Styles() {
         <div className="columns-3 gap-0 mt-12">
           <div className="flex place-content-center mb-6">
             <PicCard
-              title="Test"
+              title="Test img2img"
               image="/img/bg-03.avif"
               text="Development is a process of continuous improvement."
-              workflowName="bottle"
+              workflowName="workflow_img2img_api"
             ></PicCard>
           </div>
           <div className="flex place-content-center mb-6">
