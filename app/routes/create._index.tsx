@@ -3,6 +3,7 @@ import {
   LoaderFunctionArgs,
   json,
   redirectDocument,
+  unstable_parseMultipartFormData,
 } from "@remix-run/node";
 import {
   Form,
@@ -13,7 +14,7 @@ import {
 import { useEffect, useState } from "react";
 import { Header } from "~/components/Header";
 import MT from "@material-tailwind/react";
-const { Button } = MT;
+const { Button, Card, CardBody } = MT;
 
 import { queuePrompt } from "~/.server/comfyui";
 import WebSocket from "ws";
@@ -23,6 +24,8 @@ import { useProgress } from "~/utils/useProgress";
 import { nanoid } from "nanoid";
 import { Pic } from "~/components/Pic";
 import { PicProgress } from "~/components/PicProgress";
+import { UploadPanel } from "~/components/UploadPanel";
+import { s3UploaderHandler } from "~/.server/uploadToS3";
 
 interface ProgressData {
   value: number;
@@ -53,7 +56,7 @@ const trackProgress = async (
   promptId: string,
   ws: WebSocket,
   callback: {
-    onProgress: (value: number, max: number) => void;
+    onProgress: (data: ProgressData) => void;
     onDone: () => void;
   }
 ) => {
@@ -69,7 +72,7 @@ const trackProgress = async (
       } = JSON.parse(data.toString());
       if (jd.type === "progress") {
         const { value, max } = jd.data as ProgressData;
-        callback.onProgress(value, max);
+        callback.onProgress({ value, max });
         if (value === max) {
           ws.off("message", () => {});
           // add 2 secs after completion to allow some time to upload to s3. Shall be improoved in the future
@@ -83,18 +86,14 @@ const trackProgress = async (
   });
 };
 
-export async function action({ request }: ActionFunctionArgs) {
-  const body = await request.formData();
-  const style = body.get("style") || "default";
-
+async function generate(request: Request) {
   const url = new URL(request.url);
   const clientId = url.searchParams.get("clientId") as string;
-
-  const imgName = "";
+  const style = url.searchParams.get("style") as string;
   const promptId = await queuePrompt(
-    style.toString(),
+    style as string,
     clientId,
-    imgName,
+    "",
     "http://127.0.0.1:8188"
   );
 
@@ -103,8 +102,8 @@ export async function action({ request }: ActionFunctionArgs) {
   });
 
   await trackProgress(promptId, ws, {
-    onProgress: (value: number, max: number) => {
-      console.log({ value, max });
+    onProgress: (data: ProgressData) => {
+      const { value, max } = data;
       progressEventBus.emit<ComfyProgressEvent>({
         id: clientId,
         percentage: Math.round((value / max) * 100),
@@ -113,7 +112,6 @@ export async function action({ request }: ActionFunctionArgs) {
       });
     },
     onDone: () => {
-      console.log("Done");
       progressEventBus.emit<ComfyProgressEvent>({
         id: clientId,
         percentage: 100,
@@ -122,8 +120,30 @@ export async function action({ request }: ActionFunctionArgs) {
       });
     },
   });
+}
 
-  return redirectDocument(`/create?style=${style}`);
+async function upload(request: Request) {
+  const formData = await unstable_parseMultipartFormData(
+    request,
+    s3UploaderHandler
+  );
+
+  return json({ inputImage: formData.get("file") });
+}
+
+export async function action({ request }: ActionFunctionArgs) {
+  const url = new URL(request.url);
+  const type = url.searchParams.get("type") as string;
+
+  switch (type) {
+    case "generate":
+      await generate(request);
+      return redirectDocument(request.url);
+    case "upload":
+      return await upload(request);
+    default:
+      return json({});
+  }
 }
 
 interface loaderDataType {
@@ -133,31 +153,41 @@ interface loaderDataType {
 }
 
 interface actionDataType {
-  url: string;
+  inputImage: string;
 }
 
 export default function Create() {
   const loaderData = useLoaderData<loaderDataType>();
+  const actionData = useActionData<actionDataType>();
   const [images, setImages] = useState<string[]>([]);
-
-  console.log({ images });
+  const [inputImage, setInputImage] = useState<string>("");
 
   useEffect(() => {
     if (loaderData) {
       setImages(loaderData.images);
     }
-  }, [loaderData]);
+    if (actionData) {
+      setInputImage(actionData.inputImage);
+    }
+  }, [loaderData, actionData]);
 
   const progress = useProgress<ComfyProgressEvent>(loaderData.clientId);
-  const actionUrl = `/create?clientId=${loaderData.clientId}`;
+  const actionUrl = `/create?clientId=${loaderData.clientId}&style=${loaderData.style}`;
 
   return (
     <div>
       <Header></Header>
       <div className="container mx-auto px-4 py-4">
+        <div className="columns-1 mt-6">
+          <h1 className="mb-6 text-2xl">{loaderData.style}</h1>
+          <Card>
+            <CardBody className="p-3 h-96">
+              <UploadPanel action={`${actionUrl}&type=upload`}></UploadPanel>
+            </CardBody>
+          </Card>
+        </div>
         <div className="columns-1 flex place-content-center mt-20">
-          <Form action={actionUrl} method="POST">
-            <input type="hidden" name="style" value={loaderData.style} />
+          <Form action={`${actionUrl}&type=generate`} method="POST">
             <Button type="submit">Generate</Button>
           </Form>
         </div>
@@ -173,65 +203,5 @@ export default function Create() {
         </div>
       </div>
     </div>
-  );
-}
-
-function useFileUpload() {
-  const { submit, data, state, formData } = useFetcher<typeof action>();
-  const isUploading = state !== "idle";
-
-  const uploadingFiles = formData
-    ?.getAll("file")
-    ?.filter((value: unknown): value is File => value instanceof File)
-    .map((file) => {
-      const name = file.name;
-      // This line is important, this will create an Object URL, which is a `blob:` URL string
-      // We'll need this to render the image in the browser as it's being uploaded
-      const url = URL.createObjectURL(file);
-      return { name, url };
-    });
-
-  const images = (data?.files ?? []).concat(uploadingFiles ?? []);
-
-  return {
-    submit(files: FileList | null) {
-      if (!files) {
-        return;
-      }
-      const formData = new FormData();
-      for (const file of files) {
-        formData.append("file", file);
-      }
-      submit(formData, { method: "POST", encType: "multipart/form-data" });
-    },
-    isUploading,
-    images,
-  };
-}
-
-function Image({ name, url }: { name: string; url: string }) {
-  // Here we store the object URL in a state to keep it between renders
-  const [objectUrl] = useState(() => {
-    if (url.startsWith("blob:")) return url;
-    return undefined;
-  });
-
-  useEffect(() => {
-    // If there's an objectUrl but the `url` is not a blob anymore, we revoke it
-    if (objectUrl && !url.startsWith("blob:")) URL.revokeObjectURL(objectUrl);
-  }, [objectUrl, url]);
-
-  return (
-    <img
-      alt={name}
-      src={url}
-      width={512}
-      className="h-96 object-center shadow-xl shadow-blue-gray-900/50"
-      style={{
-        // Some styles, here we apply a blur filter when it's being uploaded
-        transition: "filter 300ms ease",
-        filter: url.startsWith("blob:") ? "blur(4px)" : "blur(0)",
-      }}
-    />
   );
 }

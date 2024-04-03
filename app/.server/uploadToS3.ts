@@ -16,7 +16,7 @@ const uploadStreamToS3 = async (
   data: AsyncIterable<Uint8Array>,
   key: string,
   contentType: string
-) => {
+): Promise<string> => {
   const params: PutObjectCommandInput = {
     Bucket: PICSTORE_BUCKET,
     Key: key,
