@@ -9,26 +9,11 @@ export default function Styles() {
         <div className="columns-3 gap-0 mt-12">
           <div className="flex place-content-center mb-6">
             <PicCard
-              title="Test img2img"
-              image="/img/bg-03.avif"
-              text="Development is a process of continuous improvement."
-              workflowName="workflow_img2img_api"
-            ></PicCard>
-          </div>
-          <div className="flex place-content-center mb-6">
-            <PicCard
-              title="Background remover"
-              image="/img/bg-remover.webp"
-              text="Remove the background from your images."
-              workflowName="bottle"
-            ></PicCard>
-          </div>
-          <div className="flex place-content-center mb-6">
-            <PicCard
-              title="Colorize"
-              image="/img/colorize.jpeg"
-              text="Remove the background from your images."
-              workflowName="bottle"
+              title="Image Evolution"
+              image="/img/img2img.webp"
+              text="
+              Dive into the mesmerizing world of image evolution. With the power of our GPT Prompt Enhancer, embark on an endless journey of artistic innovation."
+              workflowName="img2img"
             ></PicCard>
           </div>
         </div>

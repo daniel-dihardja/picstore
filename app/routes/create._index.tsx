@@ -42,14 +42,14 @@ type ComfyProgressEvent = Readonly<{
 
 interface SiteState {
   clientId: string;
-  style: string;
+  workflowName: string;
   inputImage: string;
   images: string[];
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { searchParams } = new URL(request.url);
-  const style = searchParams.get("style");
+  const workflowName = searchParams.get("m");
   const files = await listImages();
   const images = files
     ?.filter((e) => e.Key?.includes(".png"))
@@ -59,7 +59,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const inputImage = searchParams.get("inputImage");
 
-  return json({ clientId, style, inputImage, images });
+  return json({ clientId, workflowName, inputImage, images });
 }
 
 const trackProgress = async (
@@ -99,12 +99,10 @@ const trackProgress = async (
 async function generate(request: Request) {
   const url = new URL(request.url);
   const clientId = url.searchParams.get("clientId") as string;
-  const style = url.searchParams.get("style") as string;
+  const workflowName = url.searchParams.get("m") as string;
   const inputImage = url.searchParams.get("inputImage") as string;
 
-  const workflow = await loadWorkflow(style);
-
-  console.log("inputImage: ", inputImage);
+  const workflow = await loadWorkflow(workflowName);
 
   if (inputImage) {
     workflow["10"].inputs.image = `/${inputImage}`;
@@ -171,8 +169,6 @@ export default function Create() {
   const [images, setImages] = useState<string[]>([]);
   const [inputImage, setInputImage] = useState<string>("");
 
-  console.log(loaderData);
-
   useEffect(() => {
     if (loaderData) {
       setImages(loaderData.images);
@@ -181,14 +177,14 @@ export default function Create() {
   }, [loaderData]);
 
   const progress = useProgress<ComfyProgressEvent>(loaderData.clientId);
-  const actionUrl = `/create?clientId=${loaderData.clientId}&style=${loaderData.style}&inputImage=${loaderData.inputImage}`;
+  const actionUrl = `/create?clientId=${loaderData.clientId}&m=${loaderData.workflowName}&inputImage=${loaderData.inputImage}`;
 
   return (
     <div>
       <Header></Header>
       <div className="container mx-auto px-4 py-4">
         <div className="columns-1 mt-6">
-          <h1 className="mb-6 text-2xl">{loaderData.style}</h1>
+          <h1 className="mb-6 text-2xl">{loaderData.workflowName}</h1>
           <Card>
             <CardBody className="p-3 h-96">
               <UploadPanel
