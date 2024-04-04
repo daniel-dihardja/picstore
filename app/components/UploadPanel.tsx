@@ -53,7 +53,7 @@ export function UploadPanel(props: UploadInputImage) {
               : null
           }
         >
-          Upload Image
+          {isUploading ? "Uploading ..." : "Upload Image"}
         </Button>
       </Form>
     </div>
