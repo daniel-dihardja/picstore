@@ -17,9 +17,9 @@ export default function Index() {
         <h1 className="text-4xl font-bold mb-4 pt-12">Picstore-Mocha</h1>
         <p className="text-xl text-center mb-8 max-w-md">
           Generate stunning AI images, enhance prompts for unparalleled
-          creativity, and transform ideas into poster artworks. Download your
-          creations in high-quality, printable formats. Where imagination meets
-          innovation—your next masterpiece awaits.
+          creativity, and transform ideas into print on demand artworks.
+          Download your creations in high-quality, printable formats. Where
+          imagination meets innovation—your next masterpiece awaits.
         </p>
         <a
           href="/explore"
