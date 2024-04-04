@@ -13,26 +13,21 @@ export function UploadPanel(props: UploadInputImage) {
   const hiddenFileInput = useRef(null);
   const submit = useSubmit();
   const [isUploading, setIsIsUploading] = useState(false);
+
   const upload = async (e: React.FormEvent<HTMLFormElement>) => {
     submit(e.currentTarget);
     setIsIsUploading(true);
   };
+
   return (
-    <div className=" bg-gray-200 h-full w-full rounded-md m-0 flex items-center justify-center">
+    <div className="h-full w-full rounded-md m-0 flex items-center justify-center">
       <Form
         action={props.action}
         method="POST"
         encType="multipart/form-data"
-        className="flex place-content-center flex-col"
+        className="flex place-content-center flex-col h-full w-full "
         onChange={(e) => upload(e)}
       >
-        {props.image ? (
-          <img
-            src={`https://picstore.s3.eu-central-1.amazonaws.com/input/${props.image}`}
-            className=" h-72"
-          ></img>
-        ) : null}
-
         <input
           name="file"
           type="file"
@@ -40,20 +35,39 @@ export function UploadPanel(props: UploadInputImage) {
           ref={hiddenFileInput}
         />
         <Button
+          ripple={false}
           variant="text"
-          loading={isUploading}
-          className="flex place-content-center mt-1"
+          className="h-full w-full flex flex-row items-center justify-center bg-gray-100"
           onClick={
             !isUploading
               ? () => {
-                  hiddenFileInput && !isUploading
-                    ? hiddenFileInput.current.click()
-                    : null;
+                  hiddenFileInput ? hiddenFileInput.current.click() : null;
                 }
               : null
           }
         >
-          {isUploading ? "Uploading ..." : "Upload Image"}
+          {props.image ? (
+            <div className="flex flex-col place-content-center">
+              <img
+                src={`https://picstore.s3.eu-central-1.amazonaws.com/input/${props.image}`}
+                className="h-72"
+              ></img>
+              <p className=" text-gray-400 mt-4 flex place-content-center">
+                {isUploading ? (
+                  <Button
+                    size="sm"
+                    className="h-4"
+                    variant="text"
+                    loading={true}
+                  >
+                    Loading
+                  </Button>
+                ) : (
+                  <span>Click to upload</span>
+                )}
+              </p>
+            </div>
+          ) : null}
         </Button>
       </Form>
     </div>
