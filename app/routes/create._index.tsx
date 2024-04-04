@@ -14,7 +14,7 @@ import {
 import { useEffect, useState } from "react";
 import { Header } from "~/components/Header";
 import MT from "@material-tailwind/react";
-const { Button, Card, CardBody } = MT;
+const { Button, Card, CardBody, Breadcrumbs } = MT;
 
 import { queuePrompt } from "~/.server/comfyui";
 import WebSocket from "ws";
@@ -184,7 +184,15 @@ export default function Create() {
       <Header></Header>
       <div className="container mx-auto px-4 py-4">
         <div className="columns-1 mt-6">
-          <h1 className="mb-6 text-2xl">{loaderData.workflowName}</h1>
+          {/* <h1 className="mb-6 text-2xl">{loaderData.workflowName}</h1> */}
+          <Breadcrumbs fullWidth className="mb-2">
+            <a href="/explore" className="opacity-60">
+              Back
+            </a>
+            <a href="#" className="opacity-60">
+              {loaderData.workflowName}
+            </a>
+          </Breadcrumbs>
           <Card>
             <CardBody className="p-3 h-96">
               <UploadPanel
