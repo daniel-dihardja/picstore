@@ -1,6 +1,6 @@
 import React from "react";
 import pkg from "@material-tailwind/react";
-const { Navbar, MobileNav, Typography, Button, IconButton } = pkg;
+const { Navbar, MobileNav, Typography, Button, IconButton, Avatar } = pkg;
 
 export function Header() {
   const [openNav, setOpenNav] = React.useState(false);
@@ -76,6 +76,7 @@ export function Header() {
             </svg>
           )}
         </IconButton>
+        <Avatar src="/img/dummy-avatar.png" alt="avatar" />
       </div>
       <MobileNav open={openNav}>
         <div className="container mx-auto">
