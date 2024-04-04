@@ -21,10 +21,10 @@ export function Header() {
       <div className="container mx-auto flex items-center justify-between text-blue-gray-900">
         <Typography
           as="a"
-          href="/explore"
+          href="/"
           className="mr-4 cursor-pointer py-1.5 font-medium"
         >
-          Picstore Mocha
+          Picstore-Mocha
         </Typography>
         <div className="hidden lg:block">{navList}</div>
         <div className="flex items-center gap-x-1">

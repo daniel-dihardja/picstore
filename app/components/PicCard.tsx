@@ -26,12 +26,12 @@ export function PicCard(props: PicCardProps) {
         <Typography variant="h5" color="blue-gray" className="mb-2">
           {props.title}
         </Typography>
-        <Typography>{props.text}</Typography>
+        <Typography className="montserrat-400">{props.text}</Typography>
       </CardBody>
-      <CardFooter className="pt-0">
+      <CardFooter className="pt-0 flex place-content-center">
         <Button
           onClick={() => {
-            navigate(`/create?style=${props.workflowName}`);
+            navigate(`/create?m=${props.workflowName}`);
           }}
         >
           Create
