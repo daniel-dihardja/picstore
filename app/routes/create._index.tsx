@@ -194,9 +194,11 @@ export default function Create() {
             </CardBody>
           </Card>
         </div>
-        <div className="columns-1 flex place-content-center mt-20">
+        <div className="columns-1 flex place-content-center my-12">
           <Form action={`${actionUrl}&type=generate`} method="POST">
-            <Button type="submit">Generate</Button>
+            <Button type="submit" className="rounded-full" size="lg">
+              Generate
+            </Button>
           </Form>
         </div>
 
