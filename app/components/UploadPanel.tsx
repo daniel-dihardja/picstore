@@ -12,6 +12,7 @@ export function UploadPanel(props: UploadInputImage) {
         {props.image ? (
           <img
             src={`https://picstore.s3.eu-central-1.amazonaws.com/input/${props.image}`}
+            className=" h-72"
           ></img>
         ) : (
           <p>Drop image or click to upload</p>

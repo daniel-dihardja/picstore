@@ -18,14 +18,14 @@ const { Button, Card, CardBody } = MT;
 
 import { queuePrompt } from "~/.server/comfyui";
 import WebSocket from "ws";
-import { listImages } from "~/.server/listImages";
+import { listImages } from "~/.server/s3-listImages";
 import { progressEventBus } from "~/.server/progress-event-bus";
 import { useProgress } from "~/utils/useProgress";
 import { nanoid } from "nanoid";
 import { Pic } from "~/components/Pic";
 import { PicProgress } from "~/components/PicProgress";
 import { UploadPanel } from "~/components/UploadPanel";
-import { s3UploaderHandler } from "~/.server/uploadToS3";
+import { s3UploaderHandler } from "~/.server/s3-upload";
 import { loadWorkflow } from "~/.server/workflow-loader";
 
 interface ProgressData {

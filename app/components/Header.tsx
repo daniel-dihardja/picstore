@@ -24,11 +24,11 @@ export function Header() {
           href="/explore"
           className="mr-4 cursor-pointer py-1.5 font-medium"
         >
-          Explore Styles
+          Picrom
         </Typography>
         <div className="hidden lg:block">{navList}</div>
         <div className="flex items-center gap-x-1">
-          <Button variant="text" size="sm" className="hidden lg:inline-block">
+          {/* <Button variant="text" size="sm" className="hidden lg:inline-block">
             <span>Log In</span>
           </Button>
           <Button
@@ -37,7 +37,7 @@ export function Header() {
             className="hidden lg:inline-block"
           >
             <span>Sign in</span>
-          </Button>
+          </Button> */}
         </div>
         <IconButton
           variant="text"
