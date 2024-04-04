@@ -1,6 +1,7 @@
 import React from "react";
 import pkg from "@material-tailwind/react";
-const { Navbar, MobileNav, Typography, Button, IconButton, Avatar } = pkg;
+const { Navbar, MobileNav, Typography, Button, IconButton, Avatar, Collapse } =
+  pkg;
 
 export function Header() {
   const [openNav, setOpenNav] = React.useState(false);
@@ -78,7 +79,7 @@ export function Header() {
         </IconButton>
         <Avatar src="/img/dummy-avatar.png" alt="avatar" />
       </div>
-      <MobileNav open={openNav}>
+      <Collapse open={openNav}>
         <div className="container mx-auto">
           {navList}
           <div className="flex items-center gap-x-1">
@@ -90,7 +91,7 @@ export function Header() {
             </Button>
           </div>
         </div>
-      </MobileNav>
+      </Collapse>
     </Navbar>
   );
 }
