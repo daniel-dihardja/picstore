@@ -46,28 +46,23 @@ export function UploadPanel(props: UploadInputImage) {
               : null
           }
         >
-          {props.image ? (
-            <div className="flex flex-col place-content-center">
+          <div className="flex flex-col place-content-center">
+            {props.image ? (
               <img
                 src={`https://picstore.s3.eu-central-1.amazonaws.com/input/${props.image}`}
                 className="h-72"
               ></img>
-              <p className=" text-gray-400 mt-4 flex place-content-center">
-                {isUploading ? (
-                  <Button
-                    size="sm"
-                    className="h-4"
-                    variant="text"
-                    loading={true}
-                  >
-                    Loading
-                  </Button>
-                ) : (
-                  <span>Click to upload</span>
-                )}
-              </p>
-            </div>
-          ) : null}
+            ) : null}
+            <p className=" text-gray-400 mt-4 flex place-content-center">
+              {isUploading ? (
+                <Button size="sm" className="h-4" variant="text" loading={true}>
+                  Loading
+                </Button>
+              ) : (
+                <span>Click to upload</span>
+              )}
+            </p>
+          </div>
         </Button>
       </Form>
     </div>
