@@ -4,7 +4,7 @@ import { Header } from "~/components/Header";
 
 export const meta: MetaFunction = () => {
   return [
-    { title: "Style2Image" },
+    { title: "Picstore Mocha" },
     { name: "description", content: "Lets create some artworks" },
   ];
 };
