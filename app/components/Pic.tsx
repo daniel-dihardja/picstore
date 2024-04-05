@@ -7,9 +7,9 @@ export interface PicProps {
 }
 export function Pic(props: PicProps) {
   return (
-    <Card className="mb-4">
-      <CardBody className="flex flex-col place-content-center">
-        <img src={props.url} alt="card-image" width="250" />
+    <Card className="mb-4 ">
+      <CardBody className="flex flex-col place-content-center p-4 min-h-15">
+        <img src={props.url} alt="card-image" className="w-full" />
       </CardBody>
     </Card>
   );

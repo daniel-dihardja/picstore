@@ -1,6 +1,8 @@
 import {
   ActionFunctionArgs,
   LoaderFunctionArgs,
+  Session,
+  SessionData,
   json,
   redirectDocument,
   unstable_parseMultipartFormData,
@@ -28,6 +30,10 @@ import { PicProgress } from "~/components/PicProgress";
 import { UploadPanel } from "~/components/UploadPanel";
 import { s3UploaderHandler } from "~/.server/s3-upload";
 import { loadWorkflow } from "~/.server/workflow-loader";
+import { PromptPanel } from "~/components/PromptPanel";
+import { getSession, commitSession } from "../sessions";
+
+import { useLocation } from "@remix-run/react";
 
 interface ProgressData {
   value: number;
@@ -41,13 +47,6 @@ type ComfyProgressEvent = Readonly<{
   float: number;
 }>;
 
-interface SiteState {
-  clientId: string;
-  workflowName: string;
-  inputImage: string;
-  images: string[];
-}
-
 export async function loader({ request }: LoaderFunctionArgs) {
   const { searchParams } = new URL(request.url);
   const workflowName = searchParams.get("m");
@@ -58,9 +57,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     .reverse();
   const clientId = nanoid();
 
-  const inputImage = searchParams.get("inputImage");
-
-  return json({ clientId, workflowName, inputImage, images });
+  return json({ clientId, workflowName, images });
 }
 
 const trackProgress = async (
@@ -101,12 +98,18 @@ async function generate(request: Request) {
   const url = new URL(request.url);
   const clientId = url.searchParams.get("clientId") as string;
   const workflowName = url.searchParams.get("m") as string;
-  const inputImage = url.searchParams.get("inputImage") as string;
 
+  const formData = await request.formData();
+  const prompt = formData.get("prompt") as string;
+  const inputImage = formData.get("inputImage") as string;
   const workflow = await loadWorkflow(workflowName);
 
   if (inputImage) {
     workflow["10"].inputs.image = `/${inputImage}`;
+  }
+
+  if (prompt) {
+    workflow["3"].inputs.text = prompt;
   }
 
   workflow["1"].inputs.seed = Math.round(Math.random() * 99999);
@@ -136,6 +139,10 @@ async function generate(request: Request) {
       });
     },
   });
+
+  return json({
+    inputImage,
+  });
 }
 
 async function upload(request: Request) {
@@ -144,7 +151,9 @@ async function upload(request: Request) {
     s3UploaderHandler
   );
 
-  return { inputImage: formData.get("file")?.toString() };
+  const inputImage = formData.get("file")?.toString();
+
+  return json({ inputImage });
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -153,32 +162,37 @@ export async function action({ request }: ActionFunctionArgs) {
 
   switch (type) {
     case "generate":
-      await generate(request);
-      return redirectDocument(request.url);
+      return generate(request);
     case "upload":
       // eslint-disable-next-line no-case-declarations
-      const { inputImage } = await upload(request);
-      url.searchParams.set("inputImage", inputImage as string);
-      return redirectDocument(url.toString());
+      return upload(request);
     default:
       return json({});
   }
 }
 
 export default function Create() {
-  const loaderData = useLoaderData<SiteState>();
+  const loaderData = useLoaderData<typeof loader>();
+  const actionData = useActionData<typeof action>();
   const [images, setImages] = useState<string[]>([]);
   const [inputImage, setInputImage] = useState<string>("");
+  const [prompt, setPrompt] = useState<string>("");
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     if (loaderData) {
-      setImages(loaderData.images);
-      setInputImage(loaderData.inputImage);
+      setImages(loaderData.images as string[]);
+    }
+    if (actionData) {
+      if (actionData.inputImage) {
+        setInputImage(actionData.inputImage as string);
+        setIsUploading(false);
+      }
     }
   }, [loaderData]);
 
   const progress = useProgress<ComfyProgressEvent>(loaderData.clientId);
-  const actionUrl = `/create?clientId=${loaderData.clientId}&m=${loaderData.workflowName}&inputImage=${loaderData.inputImage}`;
+  const actionUrl = `/create?clientId=${loaderData.clientId}&m=${loaderData.workflowName}`;
 
   return (
     <div>
@@ -190,15 +204,24 @@ export default function Create() {
           </Link>
           <Card>
             <CardBody className="p-3 h-96">
-              <UploadPanel
-                action={`${actionUrl}&type=upload`}
-                image={inputImage}
-              ></UploadPanel>
+              <div className="columns-2 h-full">
+                <PromptPanel
+                  onChange={(e) => setPrompt(e.currentTarget.value)}
+                ></PromptPanel>
+                <UploadPanel
+                  action={`${actionUrl}&type=upload`}
+                  image={inputImage}
+                  isUploading={isUploading}
+                  onUpload={() => setIsUploading(true)}
+                ></UploadPanel>
+              </div>
             </CardBody>
           </Card>
         </div>
         <div className="columns-1 flex place-content-center my-12">
           <Form action={`${actionUrl}&type=generate`} method="POST">
+            <input type="hidden" name="prompt" value={prompt}></input>
+            <input type="hidden" name="inputImage" value={inputImage}></input>
             <Button type="submit" className="rounded-full" size="lg">
               Generate
             </Button>

@@ -8,8 +8,6 @@ export const useProgress = <T>(
     event: id.toString(),
   });
 
-  console.log({ progressStream });
-
   if (progressStream) {
     try {
       const event = JSON.parse(progressStream) as T;
