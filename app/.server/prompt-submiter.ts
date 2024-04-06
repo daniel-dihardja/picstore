@@ -1,10 +1,5 @@
 import { env } from "./env";
 
-const { COMFY_API_URL } = process.env;
-if (!COMFY_API_URL) {
-  throw new Error(`COMFY_API_URL must be set.`);
-}
-
 export type PromptConfig = { [key: string]: string };
 
 const mapConfigs = (workflow: undefined, config: PromptConfig) => {
@@ -44,23 +39,6 @@ const submitBasenet = async (promptConfig: PromptConfig) => {
 };
 
 export const queuePrompt = async (prompt: undefined, config: PromptConfig) => {
-  //const p = mapConfigs(prompt, config);
   console.log({ config });
   return await submitBasenet(config);
-
-  // try {
-  //   const p = mapConfigs(prompt, config);
-  //   const res = await fetch(`${COMFY_API_URL}/prompt`, {
-  //     method: "POST",
-  //     body: JSON.stringify({ prompt }),
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //   });
-  //   const data = await res.json();
-  //   return data.prompt_id;
-  // } catch (err) {
-  //   console.error(err);
-  //   throw new Error("Failed to queue prompt");
-  // }
 };
