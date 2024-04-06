@@ -9,10 +9,7 @@ import { s3Client } from "./s3";
 import sharp, { Sharp } from "sharp";
 declare function sharp(): Sharp;
 
-const { PICSTORE_BUCKET } = process.env;
-if (!PICSTORE_BUCKET) {
-  throw new Error(`PICSTORE_BUCKET must be set.`);
-}
+import { env } from "./env";
 
 const resizeImage = async (imgData: Buffer) => {
   return sharp(imgData).resize({ width: 512 }).toBuffer();
@@ -24,7 +21,7 @@ const uploadStreamToS3 = async (
   contentType: string
 ): Promise<string> => {
   const params: PutObjectCommandInput = {
-    Bucket: PICSTORE_BUCKET,
+    Bucket: env.PICSTORE_BUCKET,
     Key: `input/${key}`,
     Body: await resizeImage(await convertToBuffer(data)),
     ContentType: contentType,
@@ -35,7 +32,7 @@ const uploadStreamToS3 = async (
   const url = await getSignedUrl(
     s3Client,
     new GetObjectCommand({
-      Bucket: PICSTORE_BUCKET,
+      Bucket: env.PICSTORE_BUCKET,
       Key: key,
     }),
     { expiresIn: 60 * 60 }
