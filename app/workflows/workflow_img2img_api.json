@@ -53,7 +53,7 @@
   },
   "4": {
     "inputs": {
-      "text": "{{prompt_negative}}",
+      "text": "text, low quality",
       "clip": [
         "2",
         1
@@ -67,7 +67,7 @@
   "6": {
     "inputs": {
       "pixels": [
-        "10",
+        "13",
         0
       ],
       "vae": [
@@ -96,26 +96,27 @@
       "title": "VAE Decode"
     }
   },
-  "10": {
+  "13": {
     "inputs": {
-      "image": "/bg-07.jpeg"
+      "image": "{{input_image}}",
+      "upload": "image"
     },
-    "class_type": "LoadImageS3",
+    "class_type": "LoadImage",
     "_meta": {
-      "title": "Load Image from S3"
+      "title": "Load Image"
     }
   },
-  "11": {
+  "14": {
     "inputs": {
-      "filename_prefix": "image",
+      "filename_prefix": "ComfyUI",
       "images": [
         "7",
         0
       ]
     },
-    "class_type": "SaveImageS3",
+    "class_type": "SaveImage",
     "_meta": {
-      "title": "Save Image to S3"
+      "title": "Save Image"
     }
   }
 }
