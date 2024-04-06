@@ -6,6 +6,7 @@ const requiredEnvVars = [
   "PICSTORE_URL",
   "BASETEN_API_KEY",
   "MODEL_ID",
+  "ENABLE_GENERATE",
 ];
 
 const envValues = {};
@@ -26,6 +27,7 @@ const {
   PICSTORE_URL,
   BASETEN_API_KEY,
   MODEL_ID,
+  ENABLE_GENERATE,
 } = envValues;
 
 export const env = {
@@ -36,4 +38,5 @@ export const env = {
   PICSTORE_URL,
   BASETEN_API_KEY,
   MODEL_ID,
+  ENABLE_GENERATE,
 };

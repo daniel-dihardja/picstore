@@ -54,6 +54,11 @@ async function generate(request: Request) {
     prompt: prompt,
     input_image: `${env.PICSTORE_URL}/input/` + inputImage,
   };
+
+  if (env.ENABLE_GENERATE === "false") {
+    return json({ generatedImage: "dino.jpeg" });
+  }
+
   const res = await queuePrompt(config);
 
   const imgData = res.result[0].data;

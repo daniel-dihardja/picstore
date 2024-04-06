@@ -30,17 +30,6 @@ export const uploadStreamToS3 = async (
 
   await s3Client.send(new PutObjectCommand(params));
 
-  const url = await getSignedUrl(
-    s3Client,
-    new GetObjectCommand({
-      Bucket: env.PICSTORE_BUCKET,
-      Key: key,
-    }),
-    { expiresIn: 60 * 60 }
-  );
-
-  console.log(url);
-
   return key;
 };
 
