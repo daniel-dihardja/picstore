@@ -8,5 +8,5 @@ export const listImages = async () => {
   };
 
   const data = await s3Client.send(new ListObjectsCommand(params));
-  return data.Contents;
+  return data.Contents || [];
 };

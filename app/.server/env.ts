@@ -41,4 +41,6 @@ export const env = {
   PICSTORE_REGION,
   PICSTORE_BUCKET,
   PICSTORE_URL,
+  BASETEN_API_KEY,
+  MODEL_ID,
 };

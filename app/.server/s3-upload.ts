@@ -15,15 +15,16 @@ const resizeImage = async (imgData: Buffer) => {
   return sharp(imgData).resize({ width: 512 }).toBuffer();
 };
 
-const uploadStreamToS3 = async (
-  data: AsyncIterable<Uint8Array>,
+export const uploadStreamToS3 = async (
+  data: Buffer,
   key: string,
-  contentType: string
+  contentType: string,
+  folder = "input"
 ): Promise<string> => {
   const params: PutObjectCommandInput = {
     Bucket: env.PICSTORE_BUCKET,
-    Key: `input/${key}`,
-    Body: await resizeImage(await convertToBuffer(data)),
+    Key: `${folder}/${key}`,
+    Body: await resizeImage(data),
     ContentType: contentType,
   };
 
@@ -58,5 +59,9 @@ export const s3UploaderHandler: UploadHandler = async ({
   data,
   contentType,
 }) => {
-  return await uploadStreamToS3(data, filename!, contentType);
+  return await uploadStreamToS3(
+    await convertToBuffer(data),
+    filename!,
+    contentType
+  );
 };

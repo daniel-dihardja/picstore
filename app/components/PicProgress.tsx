@@ -6,17 +6,14 @@ export interface PicProgressProps {
   percentage: number;
 }
 
-export function PicProgress(props: PicProgressProps) {
+export function PicProgress() {
   return (
-    <Card className="mb-4">
-      <CardHeader floated={false} shadow={false}>
-        <div className="flex place-content-center pt-20">
-          <h3 className="text-4xl">{props.percentage} %</h3>
-        </div>
-        <div className="flex place-content-center pt-4">
-          <p className="text-xs">Generating image</p>
-        </div>
-      </CardHeader>
+    <Card className="mb-4 flex items-center">
+      <CardBody className="flex items-center justify-center h-full">
+        <Button variant="text" loading={true}>
+          Generating ...
+        </Button>
+      </CardBody>
     </Card>
   );
 }
