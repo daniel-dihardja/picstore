@@ -30,6 +30,7 @@ export function PicCard(props: PicCardProps) {
       </CardBody>
       <CardFooter className="pt-0 flex place-content-center">
         <Button
+          className="rounded-full"
           onClick={() => {
             navigate(`/create?m=${props.workflowName}`);
           }}

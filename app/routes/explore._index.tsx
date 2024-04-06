@@ -6,7 +6,7 @@ export default function Styles() {
     <div>
       <Header></Header>
       <div className="container mx-auto px-4 py-4">
-        <div className="columns-3 gap-0 mt-12">
+        <div className="grid grid-columns-1 md:grid-columns-2 lg:grid-columns-3 gap-0 mt-12">
           <div className="flex place-content-center mb-6">
             <PicCard
               title="Image Evolution"

@@ -142,17 +142,17 @@ export default function Create() {
             Back
           </Link>
           <Card>
-            <CardBody className="p-3 h-96">
-              <div className="columns-2 h-full">
-                <PromptPanel
-                  onChange={(e) => setPrompt(e.currentTarget.value)}
-                ></PromptPanel>
+            <CardBody className="p-3 md:h-full">
+              <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-2 h-full">
                 <UploadPanel
                   action={`${actionUrl}&type=upload`}
                   image={inputImage}
                   isUploading={isUploading}
                   onUpload={() => setIsUploading(true)}
                 ></UploadPanel>
+                <PromptPanel
+                  onChange={(e) => setPrompt(e.currentTarget.value)}
+                ></PromptPanel>
               </div>
             </CardBody>
           </Card>
@@ -178,7 +178,7 @@ export default function Create() {
           </Form>
         </div>
 
-        <div className="grid grid-cols-4 gap-4 mt-6">
+        <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
           {isGenerating ? <PicProgress></PicProgress> : null}
 
           {images.map((imageUrl, index) => (
