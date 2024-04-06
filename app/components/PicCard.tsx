@@ -13,7 +13,12 @@ export interface PicCardProps {
 export function PicCard(props: PicCardProps) {
   const navigate = useNavigate();
   return (
-    <Card className="max-w-[18rem] overflow-hidden">
+    <Card
+      className="max-w-[18rem] overflow-hidden cursor-pointer"
+      onClick={() => {
+        navigate(`/create?m=${props.workflowName}`);
+      }}
+    >
       <CardHeader
         floated={false}
         shadow={false}
@@ -29,12 +34,7 @@ export function PicCard(props: PicCardProps) {
         <Typography className="montserrat-400">{props.text}</Typography>
       </CardBody>
       <CardFooter className="pt-0 flex place-content-center">
-        <Button
-          className="rounded-full"
-          onClick={() => {
-            navigate(`/create?m=${props.workflowName}`);
-          }}
-        >
+        <Button variant="text" className="rounded-full">
           Create
         </Button>
       </CardFooter>

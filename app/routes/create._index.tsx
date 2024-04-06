@@ -4,7 +4,13 @@ import {
   json,
   unstable_parseMultipartFormData,
 } from "@remix-run/node";
-import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
+import {
+  Form,
+  Link,
+  useActionData,
+  useLoaderData,
+  useNavigate,
+} from "@remix-run/react";
 import { useEffect, useState } from "react";
 import { Header } from "~/components/Header";
 import MT from "@material-tailwind/react";
@@ -116,6 +122,8 @@ export default function Create() {
   const [isUploading, setIsUploading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     if (loaderData) {
       setImages(loaderData.images as string[]);
@@ -138,9 +146,15 @@ export default function Create() {
       <Header></Header>
       <div className="container mx-auto px-4 py-4">
         <div className="columns-1 mt-6">
-          <Link to="/explore" className="mb-4 inline-block hover:underline">
+          <Button
+            variant="text"
+            className="mb-4 rounded-full"
+            onClick={() => {
+              navigate("/explore");
+            }}
+          >
             Back
-          </Link>
+          </Button>
           <Card>
             <CardBody className="p-3 md:h-full">
               <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-2 h-full">
