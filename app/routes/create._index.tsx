@@ -45,20 +45,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 async function generate(request: Request) {
-  const url = new URL(request.url);
-  const workflowName = url.searchParams.get("m") as string;
-
   const formData = await request.formData();
   const prompt = formData.get("prompt") as string;
   const inputImage = formData.get("inputImage") as string;
-  const workflow = await loadWorkflow(workflowName);
 
   const config: PromptConfig = {
     seed: Math.round(Math.random() * 99999) as unknown as string,
     prompt: prompt,
     input_image: `${env.PICSTORE_URL}/input/` + inputImage,
   };
-  const res = await queuePrompt(workflow, config);
+  const res = await queuePrompt(config);
 
   const imgData = res.result[0].data;
   const preamble = "data:image/png;base64,";

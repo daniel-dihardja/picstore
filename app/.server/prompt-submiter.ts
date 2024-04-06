@@ -38,7 +38,7 @@ const submitBasenet = async (promptConfig: PromptConfig) => {
   }
 };
 
-export const queuePrompt = async (prompt: undefined, config: PromptConfig) => {
+export const queuePrompt = async (config: PromptConfig) => {
   console.log({ config });
   return await submitBasenet(config);
 };
