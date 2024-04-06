@@ -6,7 +6,6 @@ import {
 } from "@remix-run/node";
 import {
   Form,
-  Link,
   useActionData,
   useLoaderData,
   useNavigate,
@@ -16,7 +15,7 @@ import { Header } from "~/components/Header";
 import MT from "@material-tailwind/react";
 const { Button, Card, CardBody } = MT;
 
-import { PromptConfig, queuePrompt } from "~/.server/prompt-submiter";
+import { WorkflowValues, queuePrompt } from "~/.server/prompt-submiter";
 
 import { listImages } from "~/.server/s3-listImages";
 
@@ -29,13 +28,6 @@ import { loadWorkflow } from "~/.server/workflow-loader";
 import { PromptPanel } from "~/components/PromptPanel";
 import { env } from "~/.server/env";
 import { uploadStreamToS3 } from "~/.server/s3-upload";
-
-type ComfyProgressEvent = Readonly<{
-  id: string;
-  complete: boolean;
-  percentage: number;
-  float: number;
-}>;
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { searchParams } = new URL(request.url);
@@ -51,32 +43,32 @@ export async function loader({ request }: LoaderFunctionArgs) {
 }
 
 async function generate(request: Request) {
+  if (env.ENABLE_GENERATE === "false") {
+    return json({ generatedImage: "dino.jpeg" });
+  }
   const formData = await request.formData();
   const prompt = formData.get("prompt") as string;
   const inputImage = formData.get("inputImage") as string;
 
-  const config: PromptConfig = {
+  const workflowName = new URL(request.url).searchParams.get("m");
+  const workflow = await loadWorkflow(workflowName as string);
+
+  const config: WorkflowValues = {
     seed: Math.round(Math.random() * 99999) as unknown as string,
     prompt: prompt,
     input_image: `${env.PICSTORE_URL}/input/` + inputImage,
   };
 
-  if (env.ENABLE_GENERATE === "false") {
-    return json({ generatedImage: "dino.jpeg" });
-  }
-
-  const res = await queuePrompt(config);
-
-  const imgData = res.result[0].data;
-  const preamble = "data:image/png;base64,";
-  const output = Buffer.from(imgData.replace(preamble, ""), "base64");
+  const res = await queuePrompt(workflow, config);
 
   const outputImages = await listImages();
+
+  const buffer = res?.imgBuffer;
 
   const folder = "output";
   const key = `image_${outputImages.length.toString().padStart(5, "0")}.png`;
   const generatedImage = await uploadStreamToS3(
-    output,
+    buffer,
     key,
     "image/png",
     folder
