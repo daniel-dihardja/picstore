@@ -1,7 +1,7 @@
 {
   "1": {
     "inputs": {
-      "seed": 553274601747579,
+      "seed": "{{seed}}",
       "steps": 20,
       "cfg": 8,
       "sampler_name": "euler",
@@ -40,7 +40,7 @@
   },
   "3": {
     "inputs": {
-      "text": "beautiful sunset over the ocean",
+      "text": "{{prompt}}",
       "clip": [
         "2",
         1
@@ -53,7 +53,7 @@
   },
   "4": {
     "inputs": {
-      "text": "",
+      "text": "{{prompt_negative}}",
       "clip": [
         "2",
         1
