@@ -36,7 +36,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const images = files
     ?.filter((e) => e.Key?.includes(".png"))
     .map((e) => `${process.env.PICSTORE_URL}/${e.Key}`)
-    .reverse();
+    .reverse()
+    .slice(0, 6);
+
   const clientId = nanoid();
 
   return json({ clientId, workflowName, images });
@@ -178,6 +180,7 @@ export default function Create() {
               className="rounded-full"
               size="lg"
               disabled={isGenerating || isUploading}
+              loading={isGenerating}
             >
               Generate
             </Button>
@@ -185,7 +188,7 @@ export default function Create() {
         </div>
 
         <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-          {isGenerating ? <PicProgress></PicProgress> : null}
+          {/* {isGenerating ? <PicProgress></PicProgress> : null} */}
 
           {images.map((imageUrl, index) => (
             <Pic key={index} url={imageUrl}></Pic>
