@@ -9,5 +9,5 @@ export const loader = ({ request }: LoaderArgs) => {
 };
 
 export default function Callback() {
-  return <h1>Callback</h1>;
+  return null;
 }

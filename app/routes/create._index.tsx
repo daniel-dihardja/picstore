@@ -3,6 +3,7 @@ import {
   ActionFunctionArgs,
   LoaderFunctionArgs,
   json,
+  redirect,
   unstable_parseMultipartFormData,
 } from "@remix-run/node";
 import {
@@ -26,9 +27,16 @@ import { s3UploaderHandler } from "~/.server/s3-upload";
 import { PromptPanel } from "~/components/PromptPanel";
 import { env } from "~/.server/env";
 import { uploadStreamToS3 } from "~/.server/s3-upload";
+import { authenticator } from "~/services/auth.server";
 
 // Loader function: prepares data needed for the component to render.
 export async function loader({ request }: LoaderFunctionArgs) {
+  const user = await authenticator.isAuthenticated(request);
+  if (!user) {
+    // User is not authenticated, redirect them to the login page
+    throw redirect("/signin");
+  }
+
   const { searchParams } = new URL(request.url);
   const workflowName = searchParams.get("m");
   const files = await listImages();
