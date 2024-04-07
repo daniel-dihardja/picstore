@@ -1,30 +1,13 @@
 // Import environment configurations
 import { env } from "./env";
+import { loadWorkflow } from "./workflow-loader";
 
 // Define a TypeScript type for workflow values as a dictionary
 export type WorkflowValues = { [key: string]: string };
 
-/**
- * Replaces placeholders in a workflow template with actual configuration values.
- *
- * @param workflow - The template containing placeholders for replacement.
- * @param config - The actual values to replace the placeholders.
- * @returns A parsed workflow with all placeholders replaced by actual values.
- */
-const mapConfigs = (workflow: undefined, config: WorkflowValues) => {
-  // Convert the workflow template to a string
-  const w = JSON.stringify(workflow);
-
-  // Replace each placeholder with the actual value from the config, if available
-  return JSON.parse(
-    w.replace(/\{\{(\w+)\}\}/g, (match, key) => {
-      // Check if the placeholder matches a key in the config
-      if (Object.prototype.hasOwnProperty.call(config, key)) {
-        return config[key]; // Replace with the actual value
-      }
-      return match; // Return the original placeholder if no matching key is found
-    })
-  );
+const createImageBuffer = (base64Img: string) => {
+  const preamble = "data:image/png;base64,";
+  return Buffer.from(base64Img.replace(preamble, ""), "base64");
 };
 
 /**
@@ -51,7 +34,7 @@ const submitBasenet = async (promptConfig: WorkflowValues) => {
 
     // Parse the JSON response
     const data = await resp.json();
-    return data;
+    return { imgBuffer: createImageBuffer(data.result[0].data) };
   } catch (error) {
     // Log any errors encountered during the fetch operation
     console.error("Failed to submit prompt to baseten: ", error);
@@ -83,14 +66,7 @@ const submitToProxy = async (
     // Parse the JSON response
     const data = await resp.json();
 
-    // Decode the base64 image data to a buffer
-    const preamble = "data:image/png;base64,";
-    const imgBuffer = Buffer.from(
-      data.base64Img.replace(preamble, ""),
-      "base64"
-    );
-
-    return { imgBuffer };
+    return { imgBuffer: createImageBuffer(data.base64Img) };
   } catch (error) {
     // Log any errors encountered during the fetch operation
     console.error("Failed to submit prompt to proxy: ", error);
@@ -105,12 +81,13 @@ const submitToProxy = async (
  * @returns The processed result from the proxy server.
  */
 export const queuePrompt = async (
-  workflow: undefined,
+  workflowName: string,
   workflowValues: WorkflowValues
 ) => {
-  // Currently, this function simply forwards the call to submitToProxy.
-  // It's set up for potential extension or alternate branching logic in the future.
-  return await submitToProxy(workflow, workflowValues);
-  // Uncomment the following line to switch to submitting directly to BaseTen instead.
-  // return await submitBasenet(config);
+  if (env.COMFY_PROCESSING_QUEUE === "proxy") {
+    const workflow = await loadWorkflow(workflowName as string);
+    return await submitToProxy(workflow, workflowValues);
+  } else if (env.COMFY_PROCESSING_QUEUE === "baseten") {
+    return await submitBasenet(workflowValues);
+  }
 };

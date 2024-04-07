@@ -21,7 +21,6 @@ import { listImages } from "~/.server/s3-listImages";
 
 import { nanoid } from "nanoid";
 import { Pic } from "~/components/Pic";
-import { PicProgress } from "~/components/PicProgress";
 import { UploadPanel } from "~/components/UploadPanel";
 import { s3UploaderHandler } from "~/.server/s3-upload";
 import { loadWorkflow } from "~/.server/workflow-loader";
@@ -53,7 +52,6 @@ async function generate(request: Request) {
   const inputImage = formData.get("inputImage") as string;
 
   const workflowName = new URL(request.url).searchParams.get("m");
-  const workflow = await loadWorkflow(workflowName as string);
 
   const config: WorkflowValues = {
     seed: Math.round(Math.random() * 99999) as unknown as string,
@@ -61,7 +59,7 @@ async function generate(request: Request) {
     input_image: `${env.PICSTORE_URL}/input/` + inputImage,
   };
 
-  const res = await queuePrompt(workflow, config);
+  const res = await queuePrompt(workflowName as string, config);
 
   const outputImages = await listImages();
 

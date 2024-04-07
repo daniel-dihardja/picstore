@@ -38,7 +38,7 @@ export function UploadPanel(props: UploadInputImage) {
         <Button
           ripple={false}
           variant="text"
-          className=" h-64 w-full flex flex-row items-center justify-center bg-gray-100"
+          className=" h-64 lg:h-96 w-full flex flex-row items-center justify-center bg-gray-100"
           onClick={
             !props.isUploading
               ? () => {
@@ -51,7 +51,7 @@ export function UploadPanel(props: UploadInputImage) {
             {props.image ? (
               <img
                 src={`https://picstore.s3.eu-central-1.amazonaws.com/input/${props.image}`}
-                className="h-48"
+                className=" h-44 lg:h-64"
               ></img>
             ) : null}
             <p className=" text-gray-400 mt-4 flex place-content-center">
