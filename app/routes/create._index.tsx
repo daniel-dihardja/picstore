@@ -23,7 +23,6 @@ import { nanoid } from "nanoid";
 import { Pic } from "~/components/Pic";
 import { UploadPanel } from "~/components/UploadPanel";
 import { s3UploaderHandler } from "~/.server/s3-upload";
-import { loadWorkflow } from "~/.server/workflow-loader";
 import { PromptPanel } from "~/components/PromptPanel";
 import { env } from "~/.server/env";
 import { uploadStreamToS3 } from "~/.server/s3-upload";
