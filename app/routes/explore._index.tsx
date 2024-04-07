@@ -1,5 +1,10 @@
+import { json } from "@remix-run/node";
 import { Header } from "~/components/Header";
 import { PicCard } from "~/components/PicCard";
+
+export const loader = async ({ request }) => {
+  return json({});
+};
 
 export default function Styles() {
   return (
