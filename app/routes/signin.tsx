@@ -9,10 +9,6 @@ export async function action({ request }: ActionFunctionArgs) {
   return authenticator.authenticate("google", request);
 }
 
-// const action = ({ request }: ActionArgs) => {
-//   return authenticator.authenticate("google", request);
-// };
-
 export default function Login() {
   return (
     <>
