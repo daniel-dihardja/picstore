@@ -18,15 +18,15 @@ import MT from "@material-tailwind/react";
 const { Button, Card, CardBody } = MT;
 
 // Import server-side utilities for handling prompts, S3 image listings, and workflows.
-import { WorkflowValues, queuePrompt } from "~/.server/prompt-submiter";
-import { listImages } from "~/.server/s3-listImages";
+import { WorkflowValues, queuePrompt } from "~/services/prompt-submiter.server";
+import { listImages } from "~/services/s3-listImages.server";
 import { nanoid } from "nanoid";
 import { Pic } from "~/components/Pic";
 import { UploadPanel } from "~/components/UploadPanel";
-import { s3UploaderHandler } from "~/.server/s3-upload";
+import { s3UploaderHandler } from "~/services/s3-upload.server";
 import { PromptPanel } from "~/components/PromptPanel";
-import { env } from "~/.server/env";
-import { uploadStreamToS3 } from "~/.server/s3-upload";
+import { env } from "~/services/env.server";
+import { uploadStreamToS3 } from "~/services/s3-upload.server";
 import { authenticator } from "~/services/auth.server";
 
 // Loader function: prepares data needed for the component to render.

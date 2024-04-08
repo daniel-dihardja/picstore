@@ -1,6 +1,6 @@
 // Import environment configurations
-import { env } from "./env";
-import { loadWorkflow } from "./workflow-loader";
+import { env } from "./env.server";
+import { loadWorkflow } from "./workflow-loader.server";
 
 // Define a TypeScript type for workflow values as a dictionary
 export type WorkflowValues = { [key: string]: string };

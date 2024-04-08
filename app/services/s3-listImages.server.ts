@@ -1,5 +1,5 @@
 import { ListObjectsCommand } from "@aws-sdk/client-s3";
-import { s3Client } from "./s3";
+import { s3Client } from "./s3.server";
 
 export const listImages = async () => {
   const params = {

@@ -5,11 +5,11 @@ import {
 } from "@aws-sdk/client-s3";
 import { UploadHandler } from "@remix-run/node";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { s3Client } from "./s3";
+import { s3Client } from "./s3.server";
 import sharp, { Sharp } from "sharp";
 declare function sharp(): Sharp;
 
-import { env } from "./env";
+import { env } from "./env.server";
 
 const resizeImage = async (imgData: Buffer) => {
   return sharp(imgData).resize({ width: 512 }).toBuffer();

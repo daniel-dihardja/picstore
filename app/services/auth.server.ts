@@ -2,7 +2,7 @@
 import { Authenticator, AuthorizationError } from "remix-auth";
 import { sessionStorage } from "./session.server";
 import { GoogleStrategy } from "remix-auth-google";
-import { env } from "~/.server/env";
+import { env } from "~/services/env.server";
 
 // Initialize the authenticator
 const authenticator = new Authenticator(sessionStorage);

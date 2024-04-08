@@ -1,7 +1,7 @@
 import { LoaderFunctionArgs } from "@remix-run/node";
 import { eventStream } from "remix-utils/sse/server";
-import { ProgressEvent } from "~/.server/progress-event-bus";
-import { progressEventBus } from "~/.server/progress-event-bus";
+import { ProgressEvent } from "~/services/progress-event-bus.server";
+import { progressEventBus } from "~/services/progress-event-bus.server";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const id = params.id as string;
