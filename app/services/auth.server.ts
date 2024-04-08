@@ -3,6 +3,7 @@ import { Authenticator, AuthorizationError } from "remix-auth";
 import { sessionStorage } from "./session.server";
 import { GoogleStrategy } from "remix-auth-google";
 import { env } from "~/services/env.server";
+import { upsertUser, users } from "~/services";
 
 // Initialize the authenticator
 const authenticator = new Authenticator(sessionStorage);
@@ -14,9 +15,8 @@ const googleStrategy = new GoogleStrategy(
     callbackURL: env.GOOGLE_CALLBACK_URL,
   },
   async ({ accessToken, refreshToken, extraParams, profile }) => {
-    // Your authentication logic here
-    console.log(profile);
-    return {};
+    const email = profile.emails[0].value;
+    return upsertUser(email);
   }
 );
 
