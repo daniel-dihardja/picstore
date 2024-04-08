@@ -1,9 +1,15 @@
 import React from "react";
 import pkg from "@material-tailwind/react";
+import { User } from "~/types";
 const { Navbar, MobileNav, Typography, Button, IconButton, Avatar, Collapse } =
   pkg;
 
-export function Header() {
+export interface HeaderProps {
+  credits: number;
+  user: User;
+}
+
+export function Header(props: HeaderProps) {
   const [openNav, setOpenNav] = React.useState(false);
 
   React.useEffect(() => {
@@ -77,7 +83,12 @@ export function Header() {
             </svg>
           )}
         </IconButton>
-        <Avatar src="/img/dummy-avatar.png" alt="avatar" />
+        {Number(props.credits) ? (
+          <Button disabled={true} className="rounded-full py-1.5 font-medium">
+            {props.credits} Credits
+          </Button>
+        ) : null}
+        {props.user ? <Avatar src={props.user.picture} alt="avatar" /> : null}
       </div>
       <Collapse open={openNav}>
         <div className="container mx-auto">

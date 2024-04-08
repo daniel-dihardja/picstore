@@ -6,7 +6,7 @@ import { env } from "~/services/env.server";
 import {
   upsertUser,
   createUser,
-  findUser,
+  getUser,
   createWelcomeBalance,
 } from "~/services";
 
@@ -20,10 +20,12 @@ const googleStrategy = new GoogleStrategy(
     callbackURL: env.GOOGLE_CALLBACK_URL,
   },
   async ({ accessToken, refreshToken, extraParams, profile }) => {
+    console.log(profile);
     const email = profile.emails[0].value;
-    const user = await findUser(email);
+    const picture = profile.photos[0].value;
+    const user = await getUser(email);
     if (!user) {
-      const userId = await createUser(email);
+      const userId = await createUser({ email, picture });
       await createWelcomeBalance(userId as string);
       return { id: userId };
     }

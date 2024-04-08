@@ -14,3 +14,9 @@ export interface UserBalance {
   ref: string;
   createdAt: number;
 }
+
+export interface User {
+  id: string;
+  email: string;
+  picture: string;
+}

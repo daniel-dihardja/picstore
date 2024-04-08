@@ -3,33 +3,23 @@ import { env } from "./env.server";
 import { Usage, UserBalance } from "~/types";
 
 const client = new MongoClient(env.MONGO_DB_URI);
-const db = client.db();
-
-export const userExists = async (email: string) => {
+export const db = client.db();
+export const getUser = async (userId: string) => {
   try {
     const coll = db.collection("users");
-    const res = await coll.findOne({ email });
-    return !!res;
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-export const findUser = async (email: string) => {
-  try {
-    const coll = db.collection("users");
-    const res = await coll.findOne({ email });
+    const res = await coll.findOne({ _id: userId });
     return res;
   } catch (error) {
     console.error(error);
   }
 };
 
-export const createUser = async (email: string) => {
+export const createUser = async ({ email, picture }) => {
   try {
     const coll = db.collection("users");
     const res = await coll.insertOne({
       email,
+      picture,
       createdAt: new Date().toISOString(),
     });
     return res.insertedId.toString();
@@ -38,7 +28,7 @@ export const createUser = async (email: string) => {
   }
 };
 
-export const addUserUsage = async (usage: Usage) => {
+export const createUserUsage = async (usage: Usage) => {
   try {
     const usersUsages = db.collection("users-usages");
     await usersUsages.insertOne(usage);
@@ -47,7 +37,22 @@ export const addUserUsage = async (usage: Usage) => {
   }
 };
 
-export const updateUserBalanceFromUsage = async (usage: Usage) => {
+export const getUserCredits = async (userId: string) => {
+  try {
+    const coll = db.collection("users-balance");
+    const res = await coll
+      .find({ userId })
+      .sort({ createdAt: -1 })
+      .limit(1)
+      .toArray();
+    const credits = res.length ? res[0].totalAmount : 0;
+    return Number(credits).toFixed(2);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+export const createUserBalanceFromUsage = async (usage: Usage) => {
   try {
     const coll = db.collection("users-balance");
     const { userId } = usage;
