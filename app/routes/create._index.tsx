@@ -179,7 +179,7 @@ export default function Create() {
               type="submit"
               className="rounded-full"
               size="lg"
-              disabled={isGenerating || isUploading}
+              disabled={isGenerating || isUploading || !inputImage || !prompt}
               loading={isGenerating}
             >
               Generate
