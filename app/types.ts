@@ -1,15 +1,16 @@
-export interface User {
-  email: string;
-}
-
 export interface Usage {
+  userId: string;
   serviceName: string;
   requestStartTime: number;
   requestEndTime: number;
   totalTime: number;
 }
 
-export interface UserUsage {
+export interface UserBalance {
   userId: string;
-  history: Usage[];
+  prevTotalAmount: number;
+  newAmount: number;
+  totalAmount: number;
+  ref: string;
+  createdAt: number;
 }

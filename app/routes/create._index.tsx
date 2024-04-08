@@ -29,7 +29,7 @@ import { env } from "~/services/env.server";
 import { uploadStreamToS3 } from "~/services/s3-upload.server";
 import { authenticator } from "~/services/auth.server";
 import { Usage } from "~/types";
-import { addUserUsage } from "~/services";
+import { addUserUsage, updateUserBalanceFromUsage } from "~/services";
 
 // Loader function: prepares data needed for the component to render.
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -76,6 +76,7 @@ async function generate(request: Request) {
   const requestEndTime = Date.now();
 
   const usage: Usage = {
+    userId,
     serviceName: "img2img",
     requestStartTime,
     requestEndTime,
@@ -83,7 +84,8 @@ async function generate(request: Request) {
   };
 
   // don't wait for the usage to be added
-  addUserUsage(userId, usage);
+  addUserUsage(usage);
+  updateUserBalanceFromUsage(usage);
 
   const outputImages = await listImages();
   const buffer = res?.imgBuffer;
