@@ -64,8 +64,12 @@ async function generate(request: Request) {
   }
 
   const formData = await request.formData();
-
   const userId = formData.get("userId") as string;
+
+  const credits = await getUserCredits(userId);
+  if (Number(credits) < 1) {
+    return json({ error: "Insufficient credits" }, { status: 402 });
+  }
 
   const prompt = formData.get("prompt") as string;
   const inputImage = formData.get("inputImage") as string;
