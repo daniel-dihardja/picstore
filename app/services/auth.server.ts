@@ -3,7 +3,12 @@ import { Authenticator, AuthorizationError } from "remix-auth";
 import { sessionStorage } from "./session.server";
 import { GoogleStrategy } from "remix-auth-google";
 import { env } from "~/services/env.server";
-import { upsertUser, users } from "~/services";
+import {
+  upsertUser,
+  createUser,
+  findUser,
+  createWelcomeBalance,
+} from "~/services";
 
 // Initialize the authenticator
 const authenticator = new Authenticator(sessionStorage);
@@ -16,7 +21,13 @@ const googleStrategy = new GoogleStrategy(
   },
   async ({ accessToken, refreshToken, extraParams, profile }) => {
     const email = profile.emails[0].value;
-    return upsertUser(email);
+    const user = await findUser(email);
+    if (!user) {
+      const userId = await createUser(email);
+      await createWelcomeBalance(userId as string);
+      return { id: userId };
+    }
+    return { id: user._id.toString() };
   }
 );
 
