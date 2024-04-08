@@ -28,6 +28,8 @@ import { PromptPanel } from "~/components/PromptPanel";
 import { env } from "~/services/env.server";
 import { uploadStreamToS3 } from "~/services/s3-upload.server";
 import { authenticator } from "~/services/auth.server";
+import { Usage } from "~/types";
+import { addUserUsage } from "~/services";
 
 // Loader function: prepares data needed for the component to render.
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -48,7 +50,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const clientId = nanoid();
 
-  return json({ clientId, workflowName, images });
+  return json({ user, workflowName, images });
 }
 
 // Handler for generating images based on prompts.
@@ -60,6 +62,7 @@ async function generate(request: Request) {
   const formData = await request.formData();
   const prompt = formData.get("prompt") as string;
   const inputImage = formData.get("inputImage") as string;
+  const userId = formData.get("userId") as string;
   const workflowName = new URL(request.url).searchParams.get("m");
 
   const config: WorkflowValues = {
@@ -68,7 +71,20 @@ async function generate(request: Request) {
     input_image: `${env.PICSTORE_URL}/input/` + inputImage,
   };
 
+  const requestStartTime = Date.now();
   const res = await queuePrompt(workflowName as string, config);
+  const requestEndTime = Date.now();
+
+  const usage: Usage = {
+    serviceName: "img2img",
+    requestStartTime,
+    requestEndTime,
+    totalTime: requestEndTime - requestStartTime,
+  };
+
+  // don't wait for the usage to be added
+  addUserUsage(userId, usage);
+
   const outputImages = await listImages();
   const buffer = res?.imgBuffer;
   const folder = "output";
@@ -117,6 +133,7 @@ export default function Create() {
   const [prompt, setPrompt] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [userId, setUserId] = useState<string>("");
 
   const navigate = useNavigate();
 
@@ -124,6 +141,9 @@ export default function Create() {
   useEffect(() => {
     if (loaderData) {
       setImages(loaderData.images as string[]);
+      if (loaderData.user) {
+        setUserId((loaderData.user as { id: string }).id);
+      }
     }
     if (actionData) {
       if (actionData.inputImage) {
@@ -175,6 +195,7 @@ export default function Create() {
           >
             <input type="hidden" name="prompt" value={prompt}></input>
             <input type="hidden" name="inputImage" value={inputImage}></input>
+            <input type="hidden" name="userId" value={userId}></input>
             <Button
               type="submit"
               className="rounded-full"
