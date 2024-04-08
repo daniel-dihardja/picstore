@@ -25,11 +25,11 @@ const googleStrategy = new GoogleStrategy(
     const picture = profile.photos[0].value;
     const user = await getUser(email);
     if (!user) {
-      const userId = await createUser({ email, picture });
+      const userId = await createUser({ email });
       await createWelcomeBalance(userId as string);
-      return { id: userId };
+      return { id: userId, picture };
     }
-    return { id: user._id.toString() };
+    return { id: user._id.toString(), picture };
   }
 );
 

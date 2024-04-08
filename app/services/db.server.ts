@@ -1,13 +1,13 @@
-import { MongoClient } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 import { env } from "./env.server";
 import { Usage, UserBalance } from "~/types";
 
 const client = new MongoClient(env.MONGO_DB_URI);
 export const db = client.db();
-export const getUser = async (userId: string) => {
+export const getUser = async (email: string) => {
   try {
     const coll = db.collection("users");
-    const res = await coll.findOne({ _id: userId });
+    const res = await coll.findOne({ email });
     return res;
   } catch (error) {
     console.error(error);
