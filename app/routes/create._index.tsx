@@ -175,8 +175,8 @@ export default function Create() {
   return (
     <div>
       <Header credits={credits} user={user}></Header>
-      <div className="container mx-auto px-4 py-4">
-        <div className="columns-1 mt-6">
+      <div className="container mx-auto px-4">
+        <div className="columns-1">
           <Button
             variant="text"
             className="mb-4 rounded-full"
