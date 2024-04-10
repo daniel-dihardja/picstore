@@ -14,7 +14,7 @@ export function PicCard(props: PicCardProps) {
   const navigate = useNavigate();
   return (
     <Card
-      className="max-w-[18rem] overflow-hidden cursor-pointer"
+      className="w-full overflow-hidden cursor-pointer"
       onClick={() => {
         navigate(`/create?m=${props.workflowName}`);
       }}

@@ -31,16 +31,14 @@ export default function Explore() {
     <div>
       <Header credits={credits} user={user}></Header>
       <div className="container mx-auto px-4 py-4">
-        <div className="grid grid-columns-1 md:grid-columns-2 lg:grid-columns-3 gap-0">
-          <div className="flex place-content-center mb-6">
-            <PicCard
-              title="Image Evolution"
-              image="/img/hidden-face.webp"
-              text="
-              Dive into the mesmerizing world of image evolution. With the power of our GPT Prompt Enhancer, embark on an endless journey of artistic innovation."
-              workflowName="img2img"
-            ></PicCard>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <PicCard
+            title="Foundation"
+            image="/img/hidden-face.webp"
+            text="
+            Explore the foundation of artistic innovation, where the simplicity of a prompt or the essence of an image becomes the seed for generating captivating visuals. This intuitive approach allows for the seamless creation and transformation of artwork, blending the power of words and visuals with cutting-edge technology."
+            workflowName="img2img"
+          ></PicCard>
         </div>
       </div>
     </div>

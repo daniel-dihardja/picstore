@@ -194,7 +194,7 @@ export default function Create() {
                   onUpload={() => setIsUploading(true)}
                 ></UploadPanel>
                 <PromptPanel
-                  onChange={(e) => setPrompt(e.currentTarget.value)}
+                  onChange={(prompt) => setPrompt(prompt)}
                 ></PromptPanel>
               </div>
             </CardBody>

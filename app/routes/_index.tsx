@@ -12,14 +12,20 @@ export default function Index() {
   return (
     <div>
       <Header></Header>
-      <div className="flex flex-col items-center min-h-screen bg-gray-100 text-gray-800 p-4">
-        <h1 className="text-4xl font-bold mb-4 pt-12">Picstore-Mocha</h1>
-        <p className="lg:text-2xl text-center mb-8 max-w-md">
-          Generate stunning <strong>AI</strong> images, enhance prompts for
-          unparalleled creativity, and transform ideas into{" "}
-          <strong>print on demand</strong> artworks. Download your creations in
-          high-quality, printable formats. Where <strong>imagination</strong>{" "}
-          meets innovation — your next masterpiece awaits.
+      <div className="flex flex-col items-center min-h-screen text-gray-800 p-4">
+        <h1 className="text-4xl font-bold mb-4 pt-12">Your Art, Simplified</h1>
+        <p className="lg:text-2xl text-center mb-8 w-1/4">
+          We're on a mission to democratize access to cutting-edge technology
+          and change the way fantastic art is created.
+        </p>
+        <p className="lg:text-2xl text-center mb-8 w-1/4">
+          Our platform leverages artificial intelligence to empower you, at any
+          skill level, with the unique tool of making high-quality, print-ready
+          images.
+        </p>
+        <p className="lg:text-2xl text-center mb-8 w-1/4">
+          From mesmerizing fractals to stunning abstract pieces, the creative
+          possibilities are endless!
         </p>
         <a
           href="/explore"
