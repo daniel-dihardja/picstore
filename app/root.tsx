@@ -28,7 +28,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        {process.env.NODE_ENV === "production" ? null : (
+        {process.env.NODE_ENV === "development" ? null : (
           <>
             <script
               async
