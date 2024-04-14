@@ -37,7 +37,7 @@ export default function Index() {
         </p>
         <Button
           size="lg"
-          onClick={() => navigate("/explore")}
+          onClick={() => navigate("/create")}
           className="rounded-full"
         >
           Get Started

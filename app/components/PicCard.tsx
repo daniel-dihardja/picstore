@@ -16,7 +16,7 @@ export function PicCard(props: PicCardProps) {
     <Card
       className="w-full overflow-hidden cursor-pointer"
       onClick={() => {
-        navigate(`/create?m=${props.workflowName}`);
+        navigate(`/create/${props.workflowName}`);
       }}
     >
       <CardHeader
