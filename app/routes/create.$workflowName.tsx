@@ -94,8 +94,14 @@ async function generate(request: Request) {
   createUserUsage(usage);
   createUserBalanceFromUsage(usage);
 
-  const outputImages = await listImages(userId);
   const buffer = res?.imgBuffer;
+
+  if (!buffer) {
+    return json({ generatedImage: null, generationComplete: true });
+  }
+
+  const outputImages = await listImages(userId);
+
   const key = `${userId}/output/image_${outputImages.length
     .toString()
     .padStart(5, "0")}.png`;
@@ -107,7 +113,7 @@ async function generate(request: Request) {
 
   console.log("generated image: ", generatedImage);
 
-  return json({ generatedImage });
+  return json({ generatedImage, generationComplete: true });
 }
 
 async function upload(request: Request) {
@@ -160,8 +166,7 @@ export default function Create() {
         setInputImage(actionData.inputImage as string);
         setIsUploading(false);
       }
-      if (actionData.generatedImage) {
-        console.log("generated: ", actionData.generatedImage);
+      if (actionData.generationComplete) {
         setIsGenerating(false);
       }
     }
@@ -212,7 +217,7 @@ export default function Create() {
             type="submit"
             className="rounded-full"
             size="lg"
-            // disabled={modelStatus.status !== "ACTIVE"}
+            disabled={modelStatus.status !== "ACTIVE"}
             loading={isGenerating}
           >
             Generate
