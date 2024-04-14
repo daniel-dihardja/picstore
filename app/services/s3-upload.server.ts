@@ -1,12 +1,7 @@
-import {
-  PutObjectCommand,
-  GetObjectCommand,
-  PutObjectCommandInput,
-} from "@aws-sdk/client-s3";
+import { PutObjectCommand, PutObjectCommandInput } from "@aws-sdk/client-s3";
 import { UploadHandler } from "@remix-run/node";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { s3Client } from "./s3.server";
 import sharp, { Sharp } from "sharp";
+import { s3Client } from "./s3.server";
 declare function sharp(): Sharp;
 
 import { env } from "./env.server";
@@ -18,12 +13,11 @@ const resizeImage = async (imgData: Buffer) => {
 export const uploadStreamToS3 = async (
   data: Buffer,
   key: string,
-  contentType: string,
-  folder = "input"
+  contentType: string
 ): Promise<string> => {
   const params: PutObjectCommandInput = {
     Bucket: env.PICSTORE_BUCKET,
-    Key: `${folder}/${key}`,
+    Key: key,
     Body: await resizeImage(data),
     ContentType: contentType,
   };
@@ -42,6 +36,18 @@ async function convertToBuffer(a: AsyncIterable<Uint8Array>) {
   }
   return Buffer.concat(result);
 }
+
+export const useS3UploaderHandler = (
+  userId: string
+): (({ filename, data, contentType }) => Promise<string>) => {
+  return async ({ filename, data, contentType }) => {
+    return await uploadStreamToS3(
+      await convertToBuffer(data),
+      `${userId}/input/${filename!}`,
+      contentType
+    );
+  };
+};
 
 export const s3UploaderHandler: UploadHandler = async ({
   filename,

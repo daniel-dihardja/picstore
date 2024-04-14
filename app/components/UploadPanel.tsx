@@ -1,7 +1,7 @@
 import { Form, useSubmit } from "@remix-run/react";
 
 import pkg from "@material-tailwind/react";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 const { Button } = pkg;
 
 export interface UploadInputImage {
@@ -50,7 +50,7 @@ export function UploadPanel(props: UploadInputImage) {
           <div className="flex flex-col place-content-center">
             {props.image ? (
               <img
-                src={`https://picstore.s3.eu-central-1.amazonaws.com/input/${props.image}`}
+                src={`https://picstore.s3.eu-central-1.amazonaws.com/${props.image}`}
                 className=" h-44 lg:h-64"
               ></img>
             ) : null}

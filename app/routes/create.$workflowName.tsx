@@ -1,4 +1,5 @@
 // Import statements for necessary Remix and React hooks, components, and utilities.
+import MT from "@material-tailwind/react";
 import {
   ActionFunctionArgs,
   LoaderFunctionArgs,
@@ -11,59 +12,49 @@ import {
   useActionData,
   useLoaderData,
   useNavigate,
+  useParams,
 } from "@remix-run/react";
 import { useEffect, useState } from "react";
-import { Header } from "~/components/Header";
-import MT from "@material-tailwind/react";
 const { Button, Card, CardBody } = MT;
 
 // Import server-side utilities for handling prompts, S3 image listings, and workflows.
-import { WorkflowValues, queuePrompt } from "~/services/prompt-submiter.server";
-import { listImages } from "~/services/s3-listImages.server";
-import { nanoid } from "nanoid";
 import { Pic } from "~/components/Pic";
-import { UploadPanel } from "~/components/UploadPanel";
-import { s3UploaderHandler } from "~/services/s3-upload.server";
 import { PromptPanel } from "~/components/PromptPanel";
-import { env } from "~/services/env.server";
-import { uploadStreamToS3 } from "~/services/s3-upload.server";
-import { authenticator } from "~/services/auth.server";
-import { Usage } from "~/types";
+import { UploadPanel } from "~/components/UploadPanel";
 import {
-  createUserUsage,
   createUserBalanceFromUsage,
+  createUserUsage,
   getUserCredits,
 } from "~/services";
+import { authenticator } from "~/services/auth.server";
+import { env } from "~/services/env.server";
+import { WorkflowValues, queuePrompt } from "~/services/prompt-submiter.server";
+import { listImages } from "~/services/s3-listImages.server";
+import {
+  uploadStreamToS3,
+  useS3UploaderHandler,
+} from "~/services/s3-upload.server";
+import { Usage } from "~/types";
 
-import { progressEventBus } from "~/services/progress-event-bus.server";
-import { useUploadProgress } from "~/services/use-upload-progress";
 import { modelStatus$ } from "~/components/ModelStatus";
 
-// Loader function: prepares data needed for the component to render.
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader({ request, params }: LoaderFunctionArgs) {
   const user = await authenticator.isAuthenticated(request);
   if (!user) {
-    // User is not authenticated, redirect them to the login page
     throw redirect("/signin");
   }
-  const progressId = nanoid();
 
-  //return json({ progressId });
-  const { searchParams } = new URL(request.url);
-  const workflowName = searchParams.get("m");
-  const files = await listImages();
+  const workflowName = params["workflowName"];
+  const files = await listImages(user.id);
   const images = files
     ?.filter((e) => e.Key?.includes(".png"))
     .map((e) => `${env.PICSTORE_URL}/${e.Key}`)
     .reverse()
     .slice(0, 6);
 
-  const credits = await getUserCredits(user.id);
-
-  return json({ user, workflowName, images, credits, progressId });
+  return json({ user, workflowName, images });
 }
 
-// Handler for generating images based on prompts.
 async function generate(request: Request) {
   if (env.ENABLE_GENERATE === "false") {
     return json({ generatedImage: "dino.jpeg" });
@@ -84,7 +75,7 @@ async function generate(request: Request) {
   const config: WorkflowValues = {
     seed: Math.round(Math.random() * 99999) as unknown as string,
     prompt: prompt,
-    input_image: `${env.PICSTORE_URL}/input/` + inputImage,
+    input_image: `${env.PICSTORE_URL}/${inputImage}`,
   };
 
   const requestStartTime = Date.now();
@@ -103,31 +94,34 @@ async function generate(request: Request) {
   createUserUsage(usage);
   createUserBalanceFromUsage(usage);
 
-  const outputImages = await listImages();
+  const outputImages = await listImages(userId);
   const buffer = res?.imgBuffer;
-  const folder = "output";
-  const key = `image_${outputImages.length.toString().padStart(5, "0")}.png`;
+  const key = `${userId}/output/image_${outputImages.length
+    .toString()
+    .padStart(5, "0")}.png`;
   const generatedImage = await uploadStreamToS3(
-    buffer,
+    buffer as Buffer,
     key,
-    "image/png",
-    folder
+    "image/png"
   );
+
+  console.log("generated image: ", generatedImage);
 
   return json({ generatedImage });
 }
 
-// Handler for uploading images.
 async function upload(request: Request) {
+  const q = new URL(request.url).searchParams;
+  const userId = q.get("u") as string;
+
   const formData = await unstable_parseMultipartFormData(
     request,
-    s3UploaderHandler
+    useS3UploaderHandler(userId)
   );
   const inputImage = formData.get("file")?.toString();
   return json({ inputImage });
 }
 
-// Main action handler for the component, routing based on the action type.
 export async function action({ request }: ActionFunctionArgs) {
   const url = new URL(request.url);
   const type = url.searchParams.get("type") as string;
@@ -142,7 +136,6 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 }
 
-// Main component function, renders the UI for creating and managing uploads and generations.
 export default function Create() {
   const loaderData = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
@@ -151,18 +144,15 @@ export default function Create() {
   const [prompt, setPrompt] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [userId, setUserId] = useState<string>("");
-  const [credits, setCredits] = useState(loaderData.credits || 0);
+
   const [user] = useState(loaderData.user);
   const [modelStatus, setModelStatus] = useState(modelStatus$.value);
 
   const navigate = useNavigate();
 
-  // Effect hook for handling loader and action data.
   useEffect(() => {
     if (loaderData) {
-      const { credits, images } = loaderData;
-      credits ? setCredits(credits) : null;
+      const { images } = loaderData;
       images ? setImages(loaderData.images as string[]) : null;
     }
     if (actionData) {
@@ -181,11 +171,8 @@ export default function Create() {
     modelStatus$.subscribe((status) => setModelStatus(status));
   }, []);
 
-  const progress = useUploadProgress<ProgressData>(loaderData.progressId);
+  const actionUrl = `/create/img2img?u=${loaderData.user.id}&m=${loaderData.workflowName}`;
 
-  const actionUrl = `/create?progressId=${loaderData.progressId}&m=${loaderData.workflowName}`;
-
-  // Component render function.
   return (
     <div>
       <div className="columns-1">
@@ -201,7 +188,7 @@ export default function Create() {
             <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-2 h-full">
               <UploadPanel
                 action={`${actionUrl}&type=upload`}
-                image={inputImage}
+                image={`${inputImage}`}
                 isUploading={isUploading}
                 onUpload={() => setIsUploading(true)}
               ></UploadPanel>
@@ -225,7 +212,7 @@ export default function Create() {
             type="submit"
             className="rounded-full"
             size="lg"
-            disabled={modelStatus.status !== "ACTIVE"}
+            // disabled={modelStatus.status !== "ACTIVE"}
             loading={isGenerating}
           >
             Generate
