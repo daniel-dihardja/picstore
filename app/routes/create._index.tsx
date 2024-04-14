@@ -35,6 +35,10 @@ import {
   getUserCredits,
 } from "~/services";
 
+import { progressEventBus } from "~/services/progress-event-bus.server";
+import { useUploadProgress } from "~/services/use-upload-progress";
+import { modelStatus$ } from "~/components/ModelStatus";
+
 // Loader function: prepares data needed for the component to render.
 export async function loader({ request }: LoaderFunctionArgs) {
   const user = await authenticator.isAuthenticated(request);
@@ -42,7 +46,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
     // User is not authenticated, redirect them to the login page
     throw redirect("/signin");
   }
+  const progressId = nanoid();
 
+  //return json({ progressId });
   const { searchParams } = new URL(request.url);
   const workflowName = searchParams.get("m");
   const files = await listImages();
@@ -54,7 +60,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const credits = await getUserCredits(user.id);
 
-  return json({ user, workflowName, images, credits });
+  return json({ user, workflowName, images, credits, progressId });
 }
 
 // Handler for generating images based on prompts.
@@ -148,6 +154,7 @@ export default function Create() {
   const [userId, setUserId] = useState<string>("");
   const [credits, setCredits] = useState(loaderData.credits || 0);
   const [user] = useState(loaderData.user);
+  const [modelStatus, setModelStatus] = useState(modelStatus$.value);
 
   const navigate = useNavigate();
 
@@ -164,17 +171,27 @@ export default function Create() {
         setIsUploading(false);
       }
       if (actionData.generatedImage) {
+        console.log("generated: ", actionData.generatedImage);
         setIsGenerating(false);
       }
     }
   }, [loaderData, actionData]);
 
-  const actionUrl = `/create?clientId=${loaderData.clientId}&m=${loaderData.workflowName}`;
+  useEffect(() => {
+    modelStatus$.subscribe((status) => setModelStatus(status));
+  }, []);
+
+  const progress = useUploadProgress<ProgressData>(loaderData.progressId);
+
+  const actionUrl = `/create?progressId=${loaderData.progressId}&m=${loaderData.workflowName}`;
 
   // Component render function.
   return (
     <div>
       <Header credits={credits} user={user}></Header>
+      {progress?.success && progress.event ? (
+        <p>{progress.event.value}</p>
+      ) : null}
       <div className="container mx-auto px-4">
         <div className="columns-1">
           <Button
@@ -213,7 +230,7 @@ export default function Create() {
               type="submit"
               className="rounded-full"
               size="lg"
-              disabled={isGenerating || isUploading || !inputImage || !prompt}
+              disabled={modelStatus.status !== "ACTIVE"}
               loading={isGenerating}
             >
               Generate
