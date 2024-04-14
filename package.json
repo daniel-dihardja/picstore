@@ -29,6 +29,7 @@
     "remix-auth": "^3.6.0",
     "remix-auth-google": "^2.0.0",
     "remix-utils": "^7.5.0",
+    "rxjs": "^7.8.1",
     "sharp": "^0.33.3",
     "ws": "^8.16.0"
   },

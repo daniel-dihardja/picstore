@@ -1,6 +1,5 @@
 import { json, type MetaFunction } from "@remix-run/node";
 import { Header } from "~/components/Header";
-import { wakeupApi } from "~/services/wakeup-api.server";
 
 export const meta: MetaFunction = () => {
   return [

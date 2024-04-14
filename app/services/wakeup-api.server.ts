@@ -1,6 +1,7 @@
+import { BehaviorSubject } from "rxjs";
 import { env } from "./env.server";
 
-type Deployment = { status: string } | undefined;
+export type Deployment = { status: string } | undefined;
 
 const getDeployment = async () => {
   try {
