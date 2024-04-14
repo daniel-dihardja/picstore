@@ -1,5 +1,8 @@
 import { json, type MetaFunction } from "@remix-run/node";
 import { Header } from "~/components/Header";
+import MT from "@material-tailwind/react";
+import { useNavigate } from "@remix-run/react";
+const { Button } = MT;
 
 export const meta: MetaFunction = () => {
   return [
@@ -13,6 +16,7 @@ export const loader = async ({ request }) => {
 };
 
 export default function Index() {
+  const navigate = useNavigate();
   return (
     <div>
       <Header></Header>
@@ -31,12 +35,13 @@ export default function Index() {
           From mesmerizing fractals to stunning abstract pieces, the creative
           possibilities are endless!
         </p>
-        <a
-          href="/explore"
-          className=" bg-black text-white font-bold py-2 px-4 rounded-full"
+        <Button
+          size="lg"
+          onClick={() => navigate("/explore")}
+          className="rounded-full"
         >
           Get Started
-        </a>
+        </Button>
       </div>
     </div>
   );
