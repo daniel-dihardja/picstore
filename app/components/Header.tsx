@@ -1,6 +1,7 @@
 import React from "react";
 import pkg from "@material-tailwind/react";
 import { User } from "~/types";
+import ModelStatus from "./ModelStatus";
 const {
   Navbar,
   Menu,
@@ -95,6 +96,7 @@ export function Header(props: HeaderProps) {
               </svg>
             )}
           </IconButton>
+          <ModelStatus />
           {props.user ? (
             <Menu placement="bottom-end">
               <MenuHandler>

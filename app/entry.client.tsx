@@ -12,10 +12,10 @@ import { hydrateRoot } from "react-dom/client";
 startTransition(() => {
   hydrateRoot(
     document,
-    <StrictMode>
-      <ThemeProvider>
-        <RemixBrowser />
-      </ThemeProvider>
-    </StrictMode>
+    // <StrictMode>
+    <ThemeProvider>
+      <RemixBrowser />
+    </ThemeProvider>
+    // </StrictMode>
   );
 });

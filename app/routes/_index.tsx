@@ -1,11 +1,16 @@
-import type { MetaFunction } from "@remix-run/node";
+import { json, type MetaFunction } from "@remix-run/node";
 import { Header } from "~/components/Header";
+import { wakeupApi } from "~/services/wakeup-api.server";
 
 export const meta: MetaFunction = () => {
   return [
     { title: "Picstore Mocha" },
     { name: "description", content: "Lets create some artworks" },
   ];
+};
+
+export const loader = async ({ request }) => {
+  return json({});
 };
 
 export default function Index() {
