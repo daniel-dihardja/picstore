@@ -8,6 +8,7 @@ import {
 } from "@remix-run/node";
 import {
   Form,
+  Params,
   useActionData,
   useLoaderData,
   useNavigate,
@@ -54,7 +55,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   return json({ user, workflowName, images });
 }
 
-async function _generate(request: Request) {
+async function _generate(request: Request, params: Params<string>) {
   if (env.ENABLE_GENERATE === "false") {
     return json({ generatedImage: "dino.jpeg" });
   }
@@ -69,7 +70,7 @@ async function _generate(request: Request) {
 
   const prompt = formData.get("prompt") as string;
   const inputImage = formData.get("inputImage") as string;
-  const workflowName = new URL(request.url).searchParams.get("m");
+  const workflowName = params.workflowName;
 
   const config: WorkflowValues = {
     seed: Math.round(Math.random() * 99999) as unknown as string,
@@ -120,11 +121,11 @@ export type GenerateStatus = {
   success?: boolean;
 };
 
-async function generate(request: Request) {
+async function generate(request: Request, params: Params<string>) {
   const genId = nanoid();
   new Promise(async (resolve) => {
     appCache.set<GenerateStatus>(genId, { completed: false });
-    await _generate(request);
+    await _generate(request, params);
     appCache.set<GenerateStatus>(genId, { completed: true, success: true });
     resolve();
   });
@@ -143,13 +144,13 @@ async function upload(request: Request) {
   return json({ inputImage });
 }
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({ request, params }: ActionFunctionArgs) {
   const url = new URL(request.url);
   const type = url.searchParams.get("type") as string;
 
   switch (type) {
     case "generate":
-      return generate(request);
+      return generate(request, params);
     case "upload":
       return upload(request);
     default:
@@ -197,8 +198,11 @@ export default function Create() {
         const r = await fetch(`/create/progress/${actionData.genId}`);
         const d = await r.json();
         if (d.completed) {
-          clearInterval(i);
           setIsGenerating(false);
+          const res = await fetch(`/users/${user.id}/images`);
+          const resJson = await res.json();
+          setImages(resJson.images as string[]);
+          clearInterval(i);
         }
       }, 3000);
       return () => clearInterval(i);
