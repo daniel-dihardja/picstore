@@ -1,4 +1,3 @@
-// Import statements for necessary Remix and React hooks, components, and utilities.
 import MT from "@material-tailwind/react";
 import {
   ActionFunctionArgs,
@@ -12,12 +11,10 @@ import {
   useActionData,
   useLoaderData,
   useNavigate,
-  useParams,
 } from "@remix-run/react";
 import { useEffect, useState } from "react";
 const { Button, Card, CardBody } = MT;
 
-// Import server-side utilities for handling prompts, S3 image listings, and workflows.
 import { Pic } from "~/components/Pic";
 import { PromptPanel } from "~/components/PromptPanel";
 import { UploadPanel } from "~/components/UploadPanel";
@@ -36,7 +33,9 @@ import {
 } from "~/services/s3-upload.server";
 import { Usage } from "~/types";
 
+import { nanoid } from "nanoid";
 import { modelStatus$ } from "~/components/ModelStatus";
+import { appCache } from "~/services/cache.server";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const user = await authenticator.isAuthenticated(request);
@@ -55,7 +54,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   return json({ user, workflowName, images });
 }
 
-async function generate(request: Request) {
+async function _generate(request: Request) {
   if (env.ENABLE_GENERATE === "false") {
     return json({ generatedImage: "dino.jpeg" });
   }
@@ -114,6 +113,22 @@ async function generate(request: Request) {
   console.log("generated image: ", generatedImage);
 
   return json({ generatedImage, generationComplete: true });
+}
+
+export type GenerateStatus = {
+  completed: boolean;
+  success?: boolean;
+};
+
+async function generate(request: Request) {
+  const genId = nanoid();
+  new Promise(async (resolve) => {
+    appCache.set<GenerateStatus>(genId, { completed: false });
+    await _generate(request);
+    appCache.set<GenerateStatus>(genId, { completed: true, success: true });
+    resolve();
+  });
+  return json({ genId, generationCompletion: false });
 }
 
 async function upload(request: Request) {
@@ -176,7 +191,21 @@ export default function Create() {
     modelStatus$.subscribe((status) => setModelStatus(status));
   }, []);
 
-  const actionUrl = `/create/img2img?u=${loaderData.user.id}&m=${loaderData.workflowName}`;
+  useEffect(() => {
+    if (actionData?.genId) {
+      const i = setInterval(async () => {
+        const r = await fetch(`/create/progress/${actionData.genId}`);
+        const d = await r.json();
+        if (d.completed) {
+          clearInterval(i);
+          setIsGenerating(false);
+        }
+      }, 3000);
+      return () => clearInterval(i);
+    }
+  }, [actionData?.genId]);
+
+  const actionUrl = `/create/img2img?u=${loaderData.user.id}`;
 
   return (
     <div>
