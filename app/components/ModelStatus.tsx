@@ -28,7 +28,7 @@ export default function ModelStatus() {
         clearInterval(i);
         modelStatus$.complete();
       }
-    }, 30000);
+    }, 3000);
     return i;
   };
 
