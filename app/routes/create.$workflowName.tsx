@@ -250,7 +250,7 @@ export default function Create() {
             type="submit"
             className="rounded-full"
             size="lg"
-            disabled={modelStatus.status !== "ACTIVE"}
+            disabled={modelStatus.status !== "ACTIVE" || isGenerating}
             loading={isGenerating}
           >
             Generate
