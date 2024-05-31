@@ -4,7 +4,6 @@ import {
   LoaderFunctionArgs,
   json,
   redirect,
-  unstable_parseMultipartFormData,
 } from "@remix-run/node";
 import {
   Form,
@@ -28,10 +27,7 @@ import { authenticator } from "~/services/auth.server";
 import { env } from "~/services/env.server";
 import { WorkflowValues, queuePrompt } from "~/services/prompt-submiter.server";
 import { listImages } from "~/services/s3-listImages.server";
-import {
-  uploadStreamToS3,
-  useS3UploaderHandler,
-} from "~/services/s3-upload.server";
+import { uploadStreamToS3 } from "~/services/s3-upload.server";
 import { Usage } from "~/types";
 
 import { nanoid } from "nanoid";
@@ -129,33 +125,11 @@ async function generate(request: Request, params: Params<string>) {
     appCache.set<GenerateStatus>(genId, { completed: true, success: true });
     resolve();
   });
-  return json({ genId, generationCompletion: false });
-}
-
-async function upload(request: Request) {
-  const q = new URL(request.url).searchParams;
-  const userId = q.get("u") as string;
-
-  const formData = await unstable_parseMultipartFormData(
-    request,
-    useS3UploaderHandler(userId)
-  );
-  const inputImage = formData.get("file")?.toString();
-  return json({ inputImage });
+  return json({ genId, generationComplete: false });
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {
-  const url = new URL(request.url);
-  const type = url.searchParams.get("type") as string;
-
-  switch (type) {
-    case "generate":
-      return generate(request, params);
-    case "upload":
-      return upload(request);
-    default:
-      return json({});
-  }
+  return generate(request, params);
 }
 
 export default function Create() {
@@ -178,10 +152,6 @@ export default function Create() {
       images ? setImages(loaderData.images as string[]) : null;
     }
     if (actionData) {
-      if (actionData.inputImage) {
-        setInputImage(actionData.inputImage as string);
-        setIsUploading(false);
-      }
       if (actionData.generationComplete) {
         setIsGenerating(false);
       }
@@ -225,10 +195,11 @@ export default function Create() {
           <CardBody className="p-3 md:h-full">
             <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-2 h-full">
               <UploadPanel
-                action={`${actionUrl}&type=upload`}
-                image={`${inputImage}`}
-                isUploading={isUploading}
-                onUpload={() => setIsUploading(true)}
+                onUploading={() => setIsUploading(true)}
+                onUploadComplete={(uploadResponse) =>
+                  setInputImage(uploadResponse.image)
+                }
+                user={user}
               ></UploadPanel>
               <PromptPanel
                 onChange={(prompt) => setPrompt(prompt)}
