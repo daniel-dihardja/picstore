@@ -5,7 +5,7 @@ export type Deployment = { status: string } | undefined;
 
 const getDeployment = async () => {
   try {
-    const url = `https://api.baseten.co/v1/models/${env.MODEL_ID}/deployments`;
+    const url = `${env.COMFY_API_PROXY_URL}/available`;
     const response = await fetch(url, {
       method: "GET",
       headers: {
@@ -14,7 +14,7 @@ const getDeployment = async () => {
       },
     });
     const data = await response.json();
-    return { status: data.deployments[0].status };
+    return { available: data.available };
   } catch (error) {
     console.error(error);
   }

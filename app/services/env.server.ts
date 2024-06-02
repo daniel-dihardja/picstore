@@ -15,6 +15,7 @@ const EnvConfig = {
   MONGO_DB_URI: "",
   ENABLE_WAKEUP_MODEL: "",
   DEPLOYMENT_ID: "",
+  COMFY_API_PROXY_URL: "",
 } as const;
 
 // Infer the EnvironmentVariables type from the EnvConfig object
